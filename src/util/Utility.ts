@@ -1,11 +1,19 @@
-import router from "@/router";
-class Util {
-  static goBack() {
-    router.back();
-  }
+import type { Router } from "vue-router";
+import { ePage } from "./enum";
+import RoutingUtil from "./RoutingUtil";
 
-  static goPage(name: string) {
-    router.push(name);
+class Util {
+  static goPage(page: ePage, routerInstance: Router) {
+    if (page === ePage.eBack) {
+      routerInstance.back();
+      return;
+    }
+
+    const routerParams = {
+      name: RoutingUtil.getPageRouting(page).name,
+    };
+
+    routerInstance.push(routerParams);
   }
 }
 

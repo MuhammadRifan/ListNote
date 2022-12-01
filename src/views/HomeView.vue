@@ -5,10 +5,14 @@ export default {
 </script>
 <script setup lang="ts">
 import SearchField from "@/components/input_field/SearchField.vue";
-import Util from "@/util/Utility";
+import { ePage } from "@/util/enum";
+import Util from "@/util/utility";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const go = () => {
-  Util.goPage("Note");
+  Util.goPage(ePage.eNote, router);
 };
 </script>
 
