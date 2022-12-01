@@ -4,7 +4,12 @@ export default {
 };
 </script>
 <script setup lang="ts">
-defineProps({
+import { ref } from "vue";
+
+const props = defineProps({
+  strId: {
+    type: String,
+  },
   strClass: {
     type: String,
   },
@@ -25,7 +30,47 @@ defineProps({
     type: Boolean,
     default: false,
   },
+  bTextArea: {
+    type: Boolean,
+    default: false,
+  },
+  bAutoHeight: {
+    type: Boolean,
+    default: false,
+  },
+  modelValue: {
+    type: String,
+    default: "",
+  },
 });
+
+const value = ref(props.modelValue);
+const textElement = ref<InstanceType<typeof HTMLElement> | null>(null);
+
+const emit = defineEmits(["update:modelValue", "atFocusIn", "atFocusOut"]);
+
+const onInput = (event: any) => {
+  if (!event) return;
+  if (textElement.value != null) {
+    textElement.value.setAttribute("style", "height:0;");
+    textElement.value.setAttribute(
+      "style",
+      "height:" + textElement.value.scrollHeight + "px;"
+    );
+  }
+
+  emit("update:modelValue", event.target?.value);
+};
+
+const updateModelValue = (val: any) => {
+  value.value = val;
+  emit("update:modelValue", val);
+};
+
+const atFocusIn = () => emit("atFocusIn");
+const atFocusOut = () => emit("atFocusOut");
+
+defineExpose({ updateModelValue });
 </script>
 <template>
   <div
@@ -39,12 +84,36 @@ defineProps({
     ]"
   >
     <input
+      v-if="!bTextArea"
       type="text"
-      :placeholder="strPlaceholder"
+      v-model="value"
       class="w-full input"
+      @input="onInput"
+      @focusin="atFocusIn"
+      @focusout="atFocusOut"
+      :id="strId"
       :maxlength="iMaxLength"
+      :placeholder="strPlaceholder"
       :class="[
         strClassInput,
+        bSimple ? '' : 'rounded-l-full pl-[18px] mr-[5px] py-[10px]',
+      ]"
+    />
+    <textarea
+      v-else-if="bTextArea"
+      v-model="value"
+      ref="textElement"
+      class="w-full input"
+      @input="onInput"
+      @focusin="atFocusIn"
+      @focusout="atFocusOut"
+      :id="strId"
+      :maxlength="iMaxLength"
+      :placeholder="strPlaceholder"
+      :style="{ height: bAutoHeight ? textElement?.scrollHeight : '' }"
+      :class="[
+        strClassInput,
+        bAutoHeight ? 'auto-height' : '',
         bSimple ? '' : 'rounded-l-full pl-[18px] mr-[5px] py-[10px]',
       ]"
     />
@@ -58,5 +127,8 @@ defineProps({
 }
 .input:focus {
   @apply outline-none;
+}
+.auto-height {
+  @apply overflow-y-hidden resize-none;
 }
 </style>
