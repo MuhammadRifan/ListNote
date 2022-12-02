@@ -51,8 +51,13 @@ const emit = defineEmits(["update:modelValue", "atFocusIn", "atFocusOut"]);
 
 const onInput = (event: any) => {
   if (!event) return;
-  if (textElement.value != null) {
+  if (props.bAutoHeight && textElement.value != null) {
+    textElement.value.parentElement?.setAttribute("style", "height:0;");
     textElement.value.setAttribute("style", "height:0;");
+    textElement.value.parentElement?.setAttribute(
+      "style",
+      "height:" + textElement.value.scrollHeight + "px;"
+    );
     textElement.value.setAttribute(
       "style",
       "height:" + textElement.value.scrollHeight + "px;"
@@ -74,8 +79,8 @@ defineExpose({ updateModelValue });
 </script>
 <template>
   <div
-    class="cursor-text"
     :class="[
+      'cursor-text',
       strClass,
       bBorder ? 'border border-slate-100' : '',
       bSimple
@@ -87,7 +92,6 @@ defineExpose({ updateModelValue });
       v-if="!bTextArea"
       type="text"
       v-model="value"
-      class="w-full input"
       @input="onInput"
       @focusin="atFocusIn"
       @focusout="atFocusOut"
@@ -95,6 +99,7 @@ defineExpose({ updateModelValue });
       :maxlength="iMaxLength"
       :placeholder="strPlaceholder"
       :class="[
+        'w-full input',
         strClassInput,
         bSimple ? '' : 'rounded-l-full pl-[18px] mr-[5px] py-[10px]',
       ]"
@@ -103,7 +108,6 @@ defineExpose({ updateModelValue });
       v-else-if="bTextArea"
       v-model="value"
       ref="textElement"
-      class="w-full input"
       @input="onInput"
       @focusin="atFocusIn"
       @focusout="atFocusOut"
@@ -112,6 +116,7 @@ defineExpose({ updateModelValue });
       :placeholder="strPlaceholder"
       :style="{ height: bAutoHeight ? textElement?.scrollHeight : '' }"
       :class="[
+        'w-full input',
         strClassInput,
         bAutoHeight ? 'auto-height' : '',
         bSimple ? '' : 'rounded-l-full pl-[18px] mr-[5px] py-[10px]',
