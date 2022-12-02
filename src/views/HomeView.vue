@@ -7,7 +7,7 @@ export default {
 import SearchField from "@/components/input_field/SearchField.vue";
 import { useListStore, type NoteStore } from "@/store/ListStore";
 import { ePage } from "@/util/enum";
-import Util from "@/util/utility";
+import Utility from "@/util/utility";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 
@@ -28,7 +28,7 @@ const limitNote = (notes: NoteStore[]) => {
 };
 
 const goNote = (id?: number) => {
-  Util.goPage(ePage.eNote, router);
+  Utility.goPage(ePage.eNote, router);
   if (id === undefined) listStore.idActive = listStore.data.length;
   else listStore.idActive = id;
 };

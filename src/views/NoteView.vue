@@ -8,14 +8,14 @@ import TextField from "@/components/input_field/TextField.vue";
 import NoteField from "@/components/input_field/NoteField.vue";
 import { useListStore } from "@/store/ListStore";
 import { ePage } from "@/util/enum";
-import Util from "@/util/utility";
+import Utility from "@/util/utility";
 import { computed, onMounted, ref, type ComputedRef } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
 const listStore = useListStore();
 
-const goBack = () => Util.goPage(ePage.eBack, router);
+const goBack = () => Utility.goPage(ePage.eBack, router);
 
 const pin = ref(false);
 const pinned = () => {
