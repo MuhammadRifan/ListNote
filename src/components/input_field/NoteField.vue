@@ -38,6 +38,7 @@ const saveNote = (isSave: boolean) => {
       listStore.editNote({
         id: props.id,
         note: note.value,
+        dtEdited: Date.now(),
       });
     }
     isFocus.value = false;

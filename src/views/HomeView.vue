@@ -29,7 +29,7 @@ const limitNote = (notes: NoteStore[]) => {
 
 const goNote = (id?: number) => {
   Utility.goPage(ePage.eNote, router);
-  if (id === undefined) listStore.idActive = listStore.data.length;
+  if (id === undefined) listStore.idActive = listStore.getLastID;
   else listStore.idActive = id;
 };
 </script>

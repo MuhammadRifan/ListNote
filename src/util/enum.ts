@@ -3,3 +3,9 @@ export enum ePage {
   eBack,
   eNote,
 }
+
+export enum sortType {
+  sId,
+  sDate,
+  sChara,
+}
