@@ -35,7 +35,7 @@ const goNote = (id?: number) => {
 </script>
 
 <template>
-  <div class="fixed top-0 w-full max-w-sm p-[15px]">
+  <div class="fixed top-0 w-full max-w-[600px] p-[15px]">
     <SearchField str-placeholder="Search your notes" />
   </div>
   <div class="h-[76px]" />
@@ -96,7 +96,7 @@ const goNote = (id?: number) => {
     <span class="text-lg">List you add appear here</span>
   </section>
   <div
-    class="fixed bottom-0 w-full max-w-sm p-[25px] flex items-center justify-end"
+    class="fixed bottom-0 w-full max-w-[600px] p-[25px] flex items-center justify-end"
   >
     <span
       class="text-6xl cursor-pointer opacity-70 material-symbols-outlined"

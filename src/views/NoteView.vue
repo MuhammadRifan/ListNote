@@ -131,7 +131,9 @@ onMounted(() => {
 });
 </script>
 <template>
-  <div class="fixed flex items-center p-[15px] w-full max-w-sm gap-x-[10px]">
+  <div
+    class="fixed flex items-center p-[15px] w-full max-w-[600px] gap-x-[10px]"
+  >
     <span
       class="cursor-pointer material-symbols-outlined text-slate-200"
       @click="goBack()"
@@ -231,7 +233,7 @@ onMounted(() => {
   <div class="h-[54px]" />
 
   <div
-    class="fixed bottom-0 flex items-center p-[15px] w-full max-w-sm gap-x-[10px]"
+    class="fixed bottom-0 flex items-center p-[15px] w-full max-w-[600px] gap-x-[10px]"
   >
     <span
       class="cursor-pointer material-symbols-outlined text-slate-200"
