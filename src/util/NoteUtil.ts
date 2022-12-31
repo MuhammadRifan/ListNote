@@ -2,7 +2,7 @@ import type { Router } from "vue-router";
 import { ePage } from "./enum";
 import RoutingUtil from "./RoutingUtil";
 
-class Utility {
+class NoteUtil {
   static goPage(page: ePage, routerInstance: Router) {
     if (page === ePage.eBack) {
       routerInstance.back();
@@ -33,4 +33,4 @@ class Utility {
   }
 }
 
-export default Utility;
+export default NoteUtil;
