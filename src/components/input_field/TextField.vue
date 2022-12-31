@@ -22,6 +22,10 @@ const props = defineProps({
   iMaxLength: {
     type: Number,
   },
+  iDefaultHeight: {
+    type: Number,
+    default: 0,
+  },
   bBorder: {
     type: Boolean,
     default: true,
@@ -45,15 +49,22 @@ const props = defineProps({
 });
 
 const value = ref(props.modelValue);
+const height = ref(0);
 const textElement = ref<InstanceType<typeof HTMLElement> | null>(null);
 
 const emit = defineEmits(["update:modelValue", "atFocusIn", "atFocusOut"]);
 
 const onInput = (event: any) => {
   if (!event) return;
+  autoHeight();
+
+  emit("update:modelValue", event.target?.value);
+};
+
+const autoHeight = () => {
   if (props.bAutoHeight && textElement.value != null) {
-    textElement.value.parentElement?.setAttribute("style", "height:0;");
-    textElement.value.setAttribute("style", "height:0;");
+    textElement.value.parentElement?.setAttribute("style", `height:0;`);
+    textElement.value.setAttribute("style", `height:0;`);
     textElement.value.parentElement?.setAttribute(
       "style",
       "height:" + textElement.value.scrollHeight + "px;"
@@ -62,20 +73,29 @@ const onInput = (event: any) => {
       "style",
       "height:" + textElement.value.scrollHeight + "px;"
     );
+    height.value = textElement.value.scrollHeight;
   }
-
-  emit("update:modelValue", event.target?.value);
 };
 
 const updateModelValue = (val: any) => {
   value.value = val;
   emit("update:modelValue", val);
+  if (props.bAutoHeight && textElement.value != null) {
+    textElement.value.parentElement?.setAttribute(
+      "style",
+      `height:${props.iDefaultHeight}px;`
+    );
+    textElement.value.setAttribute(
+      "style",
+      `height:${props.iDefaultHeight}px;`
+    );
+  }
 };
 
 const atFocusIn = () => emit("atFocusIn");
 const atFocusOut = () => emit("atFocusOut");
 
-defineExpose({ updateModelValue });
+defineExpose({ updateModelValue, height });
 </script>
 <template>
   <div

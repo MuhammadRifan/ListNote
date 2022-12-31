@@ -17,6 +17,10 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  height: {
+    type: Number,
+    required: true,
+  },
 });
 
 const listStore = useListStore();
@@ -39,6 +43,7 @@ const saveNote = (isSave: boolean) => {
         id: props.id,
         note: note.value,
         dtEdited: Date.now(),
+        height: noteField.value?.height ?? 24,
       });
     }
     isFocus.value = false;
@@ -70,20 +75,21 @@ onMounted(() => {
         @focusout="onClose ? clearNote() : saveNote(true)"
         @keydown.enter="saveNote(true)"
         :str-id="'noteElement' + id"
-        :i-max-length="100"
+        :i-max-length="250"
+        :i-default-height="height"
         :b-simple="true"
         :b-border="false"
         :b-text-area="true"
         :b-auto-height="true"
       />
     </div>
-    <span
-      class="cursor-pointer material-symbols-outlined"
+    <div
+      class="self-center cursor-pointer material-symbols-outlined"
       :class="isFocus ? 'visible' : 'invisible'"
       @mouseenter="onClose = true"
       @mouseout="onClose = false"
     >
       close
-    </span>
+    </div>
   </div>
 </template>

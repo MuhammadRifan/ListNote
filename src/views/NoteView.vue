@@ -8,14 +8,14 @@ import TextField from "@/components/input_field/TextField.vue";
 import NoteField from "@/components/input_field/NoteField.vue";
 import { useListStore } from "@/store/ListStore";
 import { ePage, sortType } from "@/util/enum";
-import Utility from "@/util/utility";
+import NoteUtil from "@/util/NoteUtil";
 import { computed, onMounted, ref, watch, type ComputedRef } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
 const listStore = useListStore();
 
-const goBack = () => Utility.goPage(ePage.eBack, router);
+const goBack = () => NoteUtil.goPage(ePage.eBack, router);
 
 const dateEdited = ref<Date>();
 
@@ -56,7 +56,7 @@ const saveNewNote = (isSave: boolean) => {
   if (isSave) {
     if (isFocus.value && newNote.value.length > 0) {
       isCreateNew.value = false;
-      listStore.addNote(newNote.value);
+      listStore.addNote(newNote.value, noteNewField.value?.height ?? 0);
       newNote.value = "";
     }
     unFocus();
@@ -106,6 +106,12 @@ const showTime = () => {
   bShowTime.value = !bShowTime.value;
 };
 
+const convert2Digit = (num: number): string => {
+  if (num < 10) {
+    return `0${num}`;
+  } else return num.toString();
+};
+
 watch(
   () => listStore.getList,
   (list) => {
@@ -132,7 +138,8 @@ onMounted(() => {
 </script>
 <template>
   <div
-    class="fixed flex items-center p-[15px] w-full max-w-[600px] gap-x-[10px]"
+    class="fixed flex items-center p-[15px] w-full max-w-[600px] gap-x-[10px] bg-slate-700"
+    id="header"
   >
     <span
       class="cursor-pointer material-symbols-outlined text-slate-200"
@@ -172,17 +179,21 @@ onMounted(() => {
         "
       >
         <div v-for="note in listStore.getList.note" :key="note.id">
-          <NoteField :id="note.id" :note="note.note" />
+          <NoteField
+            :id="note.id"
+            :note="note.note"
+            :height="note.height ?? 24"
+          />
           <div
             v-if="bShowTime"
-            class="text-xs text-right text-slate-400 py-[1px]"
+            class="text-xs italic pl-[23px] text-slate-400 py-[1px]"
           >
             {{
-              new Date(note.dtEdited).getHours() +
+              convert2Digit(new Date(note.dtEdited).getHours()) +
               ":" +
-              new Date(note.dtEdited).getMinutes() +
+              convert2Digit(new Date(note.dtEdited).getMinutes()) +
               ", " +
-              Utility.month(new Date(note.dtEdited).getMonth(), true) +
+              NoteUtil.month(new Date(note.dtEdited).getMonth(), true) +
               " " +
               new Date(note.dtEdited).getDate() +
               " " +
@@ -211,7 +222,7 @@ onMounted(() => {
           />
         </div>
         <span
-          class="cursor-pointer material-symbols-outlined"
+          class="self-center cursor-pointer material-symbols-outlined"
           :class="isFocus ? 'visible' : 'invisible'"
           @mouseenter="onClose = true"
           @mouseout="onClose = false"
@@ -233,7 +244,8 @@ onMounted(() => {
   <div class="h-[54px]" />
 
   <div
-    class="fixed bottom-0 flex items-center p-[15px] w-full max-w-[600px] gap-x-[10px]"
+    class="fixed bottom-0 flex items-center p-[15px] w-full max-w-[600px] gap-x-[10px] bg-slate-700"
+    id="footer"
   >
     <span
       class="cursor-pointer material-symbols-outlined text-slate-200"
@@ -243,6 +255,7 @@ onMounted(() => {
     </span>
     <span
       class="cursor-pointer material-symbols-outlined text-slate-200"
+      :class="bShowTime ? 'filled' : ''"
       @click="showTime()"
     >
       schedule
@@ -251,7 +264,7 @@ onMounted(() => {
       <span v-if="dateEdited != undefined" class="text-sm">
         Edited
         {{
-          Utility.month(dateEdited.getMonth(), true) +
+          NoteUtil.month(dateEdited.getMonth(), true) +
           " " +
           dateEdited.getDate()
         }}

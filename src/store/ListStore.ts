@@ -16,6 +16,7 @@ export interface NoteStore {
   id: number;
   note: string;
   dtEdited: number;
+  height: number;
 }
 
 export interface ListStore {
@@ -142,7 +143,7 @@ export const useListStore = defineStore(
       if (id != undefined) data.value[id].pin = !data.value[id].pin;
     }
 
-    function addNote(note: string) {
+    function addNote(note: string, height: number) {
       if (findId(idActive.value) === undefined) createListNote();
       const id = findId(idActive.value);
 
@@ -153,10 +154,12 @@ export const useListStore = defineStore(
           id: data.value[id].idNote++,
           note: note,
           dtEdited: Date.now(),
+          height: height,
         });
 
         data.value[id].note = arrNote;
         updateTime();
+        sort(data.value[id].sortType);
       }
     }
     function editNote(note: NoteStore) {
@@ -171,6 +174,7 @@ export const useListStore = defineStore(
               id: note.id,
               note: note.note,
               dtEdited: note.dtEdited,
+              height: note.height,
             };
             break;
           }
@@ -178,6 +182,7 @@ export const useListStore = defineStore(
 
         data.value[id].note = arrNote;
         updateTime();
+        sort(data.value[id].sortType);
       }
     }
     function removeNote(idNote: number) {
