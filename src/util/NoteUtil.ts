@@ -1,5 +1,5 @@
 import type { Router } from "vue-router";
-import { ePage } from "./enum";
+import { ePage } from "./NoteEnum";
 import RoutingUtil from "./RoutingUtil";
 
 class NoteUtil {
@@ -31,6 +31,12 @@ class NoteUtil {
     else if (num == 11) return short ? "Dec" : "December";
     else return "";
   }
+
+  static convert2Digit = (num: number): string => {
+    if (num < 10) {
+      return `0${num}`;
+    } else return num.toString();
+  };
 }
 
 export default NoteUtil;

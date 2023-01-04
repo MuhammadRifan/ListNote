@@ -1,4 +1,4 @@
-import { ePage } from "./enum";
+import { ePage } from "./NoteEnum";
 
 class RoutingUtil {
   static getPageRouting(page: ePage): Record<string, any> {

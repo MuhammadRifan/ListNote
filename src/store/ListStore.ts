@@ -8,7 +8,7 @@
 //   return { count, name, doubleCount, increment }
 // })
 
-import { sortType } from "@/util/enum";
+import { sortType } from "@/util/NoteEnum";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 
@@ -41,7 +41,7 @@ export const useListStore = defineStore(
       note: [],
       idNote: 0,
       dtEdited: Date.now(),
-      sortType: sortType.sId,
+      sortType: sortType.sDefaultAsc,
       showTime: false,
     };
     const data = ref<ListStore[]>([]);
@@ -98,17 +98,32 @@ export const useListStore = defineStore(
       if (id != undefined) {
         const arrNote = [...data.value[id].note];
 
-        if (type === sortType.sId) {
+        if (type === sortType.sDefaultAsc) {
           arrNote.sort((a, b) => a.id - b.id);
-        } else if (type === sortType.sDate) {
+        } else if (type === sortType.sDefaultDsc) {
+          arrNote.sort((a, b) => b.id - a.id);
+          //
+        } else if (type === sortType.sDateAsc) {
+          arrNote.sort((a, b) => a.dtEdited - b.dtEdited);
+        } else if (type === sortType.sDateDsc) {
           arrNote.sort((a, b) => b.dtEdited - a.dtEdited);
-        } else if (type === sortType.sChara) {
+          //
+        } else if (type === sortType.sAlphaAsc) {
           arrNote.sort((a, b) => {
             let fa = a.note.toLowerCase();
             let fb = b.note.toLowerCase();
 
             if (fa < fb) return -1;
             else if (fa > fb) return 1;
+            return 0;
+          });
+        } else if (type === sortType.sAlphaDsc) {
+          arrNote.sort((a, b) => {
+            let fa = a.note.toLowerCase();
+            let fb = b.note.toLowerCase();
+
+            if (fb < fa) return -1;
+            else if (fb > fa) return 1;
             return 0;
           });
         }
