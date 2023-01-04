@@ -7,10 +7,11 @@ export default {
 import TextField from "@/components/input_field/TextField.vue";
 import NoteField from "@/components/input_field/NoteField.vue";
 import { useListStore } from "@/store/ListStore";
-import { ePage, sortType } from "@/util/enum";
+import { ePage, sortType } from "@/util/NoteEnum";
 import NoteUtil from "@/util/NoteUtil";
 import { computed, onMounted, ref, watch, type ComputedRef } from "vue";
 import { useRouter } from "vue-router";
+import ModalDialog from "@/components/modal/ModalDialog.vue";
 
 const router = useRouter();
 const listStore = useListStore();
@@ -78,21 +79,16 @@ const unFocus = () => {
   noteNewField.value?.updateModelValue("");
 };
 
+const sortModal = ref<InstanceType<typeof ModalDialog> | null>(null);
 const sType = ref<sortType>();
 
-const sorting = () => {
-  if (sType.value === undefined) return;
-
-  if (sType.value === sortType.sId) {
-    sType.value = sortType.sDate;
-  } else if (sType.value === sortType.sDate) {
-    sType.value = sortType.sChara;
-  } else if (sType.value === sortType.sChara) {
-    sType.value = sortType.sId;
-  }
-
-  listStore.sort(sType.value);
+const sorting = (sort: sortType) => {
+  listStore.sort(sort);
+  sType.value = sort;
+  sortModal.value?.hide();
 };
+
+const deleteModal = ref<InstanceType<typeof ModalDialog> | null>(null);
 
 const deleteList = () => {
   listStore.deleteList();
@@ -106,19 +102,10 @@ const showTime = () => {
   bShowTime.value = !bShowTime.value;
 };
 
-const convert2Digit = (num: number): string => {
-  if (num < 10) {
-    return `0${num}`;
-  } else return num.toString();
-};
-
 watch(
   () => listStore.getList,
   (list) => {
-    if (list != undefined) {
-      dateEdited.value = new Date(list.dtEdited);
-      sType.value = list.sortType;
-    }
+    if (list != undefined) dateEdited.value = new Date(list.dtEdited);
   }
 );
 
@@ -189,9 +176,9 @@ onMounted(() => {
             class="text-xs italic pl-[23px] text-slate-400 py-[1px]"
           >
             {{
-              convert2Digit(new Date(note.dtEdited).getHours()) +
+              NoteUtil.convert2Digit(new Date(note.dtEdited).getHours()) +
               ":" +
-              convert2Digit(new Date(note.dtEdited).getMinutes()) +
+              NoteUtil.convert2Digit(new Date(note.dtEdited).getMinutes()) +
               ", " +
               NoteUtil.month(new Date(note.dtEdited).getMonth(), true) +
               " " +
@@ -249,7 +236,7 @@ onMounted(() => {
   >
     <span
       class="cursor-pointer material-symbols-outlined text-slate-200"
-      @click="sorting()"
+      @click="sortModal?.show()"
     >
       sort
     </span>
@@ -272,9 +259,124 @@ onMounted(() => {
     </div>
     <span
       class="cursor-pointer material-symbols-outlined text-slate-200"
-      @click="deleteList()"
+      @click="deleteModal?.show()"
     >
       delete
     </span>
   </div>
+
+  <ModalDialog ref="sortModal" str-title="Sort By">
+    <div class="flex flex-col">
+      <div
+        class="flex justify-between items-center gap-x-[15px] p-[15px] border-t border-slate-400/50 cursor-pointer"
+        @click="
+          sType === sortType.sDefaultAsc
+            ? sorting(sortType.sDefaultDsc)
+            : sorting(sortType.sDefaultAsc)
+        "
+      >
+        <div
+          :class="
+            sType === sortType.sDefaultAsc || sType === sortType.sDefaultDsc
+              ? 'font-bold'
+              : ''
+          "
+        >
+          Default
+        </div>
+        <div class="flex items-center">
+          <span
+            class="text-slate-700 material-symbols-outlined"
+            :class="sType === sortType.sDefaultAsc ? '' : 'opacity-30'"
+          >
+            south
+          </span>
+          <span
+            class="text-slate-700 material-symbols-outlined"
+            :class="sType === sortType.sDefaultDsc ? '' : 'opacity-30'"
+          >
+            north
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex justify-between items-center gap-x-[15px] p-[15px] border-t border-slate-400/50 cursor-pointer"
+        @click="
+          sType === sortType.sAlphaAsc
+            ? sorting(sortType.sAlphaDsc)
+            : sorting(sortType.sAlphaAsc)
+        "
+      >
+        <div
+          :class="
+            sType === sortType.sAlphaAsc || sType === sortType.sAlphaDsc
+              ? 'font-bold'
+              : ''
+          "
+        >
+          Alphabet
+        </div>
+        <div class="flex items-center">
+          <span
+            class="text-slate-700 material-symbols-outlined"
+            :class="sType === sortType.sAlphaAsc ? '' : 'opacity-30'"
+          >
+            south
+          </span>
+          <span
+            class="text-slate-700 material-symbols-outlined"
+            :class="sType === sortType.sAlphaDsc ? '' : 'opacity-30'"
+          >
+            north
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex justify-between items-center gap-x-[15px] p-[15px] border-t border-slate-400/50 cursor-pointer"
+        @click="
+          sType === sortType.sDateAsc
+            ? sorting(sortType.sDateDsc)
+            : sorting(sortType.sDateAsc)
+        "
+      >
+        <div
+          :class="
+            sType === sortType.sDateAsc || sType === sortType.sDateDsc
+              ? 'font-bold'
+              : ''
+          "
+        >
+          Date Edited
+        </div>
+        <div class="flex items-center">
+          <span
+            class="text-slate-700 material-symbols-outlined"
+            :class="sType === sortType.sDateAsc ? '' : 'opacity-30'"
+          >
+            south
+          </span>
+          <span
+            class="text-slate-700 material-symbols-outlined"
+            :class="sType === sortType.sDateDsc ? '' : 'opacity-30'"
+          >
+            north
+          </span>
+        </div>
+      </div>
+    </div>
+  </ModalDialog>
+
+  <ModalDialog ref="deleteModal">
+    <div>
+      <div class="text-center p-[15px] text-sm tracking-wide text-slate-500">
+        You cannot undo this action
+      </div>
+      <div
+        class="border-t border-slate-400/50 text-center p-[15px] text-red-500 text-lg hover:bg-red-500/10 cursor-pointer"
+        @click="deleteList()"
+      >
+        Delete note
+      </div>
+    </div>
+  </ModalDialog>
 </template>
