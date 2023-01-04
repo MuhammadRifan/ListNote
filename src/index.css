@@ -5,6 +5,7 @@
 @layer base {
   #app {
     @apply bg-slate-300;
+    font-family: 'SF Pro Display', sans-serif;
   }
 
   .material-symbols-outlined.filled {
