@@ -17,6 +17,7 @@ export interface NoteStore {
   note: string;
   dtEdited: number;
   height: number;
+  completed: boolean;
 }
 
 export interface ListStore {
@@ -28,6 +29,7 @@ export interface ListStore {
   dtEdited: number;
   sortType: sortType;
   showTime: boolean;
+  withCheckbox: boolean;
 }
 
 export const useListStore = defineStore(
@@ -43,6 +45,7 @@ export const useListStore = defineStore(
       dtEdited: Date.now(),
       sortType: sortType.sDefaultAsc,
       showTime: false,
+      withCheckbox: false,
     };
     const data = ref<ListStore[]>([]);
     const idActive = ref();
@@ -141,6 +144,14 @@ export const useListStore = defineStore(
       }
     }
 
+    function showCheckbox() {
+      const id = findId(idActive.value);
+
+      if (id != undefined) {
+        data.value[id].withCheckbox = !data.value[id].withCheckbox;
+      }
+    }
+
     function title(str: string) {
       if (findId(idActive.value) === undefined) createListNote();
       const id = findId(idActive.value);
@@ -170,6 +181,7 @@ export const useListStore = defineStore(
           note: note,
           dtEdited: Date.now(),
           height: height,
+          completed: false,
         });
 
         data.value[id].note = arrNote;
@@ -184,12 +196,13 @@ export const useListStore = defineStore(
         const arrNote = [...data.value[id].note];
 
         for (let i = 0; i < arrNote.length; i++) {
-          if (arrNote[i].id === note.id && note.note != arrNote[i].note) {
+          if (arrNote[i].id === note.id) {
             arrNote[arrNote.indexOf(arrNote[i])] = {
               id: note.id,
               note: note.note,
               dtEdited: note.dtEdited,
               height: note.height,
+              completed: note.completed,
             };
             break;
           }
@@ -229,6 +242,7 @@ export const useListStore = defineStore(
       addNote,
       editNote,
       removeNote,
+      showCheckbox,
     };
 
     return {

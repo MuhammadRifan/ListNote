@@ -28,7 +28,6 @@ const show = () => {
 
 const hide = () => {
   isShowing.value = false;
-  setTimeout(() => (onShow.value = false), 500);
 };
 
 defineExpose({ show, hide });

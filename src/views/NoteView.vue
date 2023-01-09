@@ -12,6 +12,7 @@ import NoteUtil from "@/util/NoteUtil";
 import { computed, onMounted, ref, watch, type ComputedRef } from "vue";
 import { useRouter } from "vue-router";
 import ModalDialog from "@/components/modal/ModalDialog.vue";
+import ListTile from "@/components/list/ListTile.vue";
 
 const router = useRouter();
 const listStore = useListStore();
@@ -88,6 +89,8 @@ const sorting = (sort: sortType) => {
   sortModal.value?.hide();
 };
 
+const actionModal = ref<InstanceType<typeof ModalDialog> | null>(null);
+
 const deleteModal = ref<InstanceType<typeof ModalDialog> | null>(null);
 
 const deleteList = () => {
@@ -100,6 +103,13 @@ const bShowTime = ref(false);
 const showTime = () => {
   listStore.showTime();
   bShowTime.value = !bShowTime.value;
+};
+
+const bWithCheckbox = ref(false);
+
+const showCheckbox = () => {
+  listStore.showCheckbox();
+  bWithCheckbox.value = !bWithCheckbox.value;
 };
 
 watch(
@@ -120,7 +130,9 @@ onMounted(() => {
     dateEdited.value = new Date(data.dtEdited);
     sType.value = data.sortType;
     bShowTime.value = data.showTime;
+    bWithCheckbox.value = data.withCheckbox;
   }
+  actionModal.value?.show();
 });
 </script>
 <template>
@@ -165,27 +177,75 @@ onMounted(() => {
           listStore.getList != undefined && listStore.getList.note.length > 0
         "
       >
-        <div v-for="note in listStore.getList.note" :key="note.id">
-          <NoteField
-            :id="note.id"
-            :note="note.note"
-            :height="note.height ?? 24"
-          />
+        <div v-if="listStore.getList.withCheckbox">
           <div
-            v-if="bShowTime"
-            class="text-xs italic pl-[23px] text-slate-400 py-[1px]"
+            v-for="note in listStore.getList.note.filter((it) => {
+              return !it.completed;
+            })"
+            :key="note.id"
           >
-            {{
-              NoteUtil.convert2Digit(new Date(note.dtEdited).getHours()) +
-              ":" +
-              NoteUtil.convert2Digit(new Date(note.dtEdited).getMinutes()) +
-              ", " +
-              NoteUtil.month(new Date(note.dtEdited).getMonth(), true) +
-              " " +
-              new Date(note.dtEdited).getDate() +
-              " " +
-              new Date(note.dtEdited).getFullYear()
-            }}
+            <NoteField :obj-note="note" :b-with-checkbox="bWithCheckbox" />
+            <div
+              v-if="bShowTime"
+              class="text-xs italic pl-[23px] text-slate-400 py-[1px]"
+            >
+              {{
+                NoteUtil.convert2Digit(new Date(note.dtEdited).getHours()) +
+                ":" +
+                NoteUtil.convert2Digit(new Date(note.dtEdited).getMinutes()) +
+                ", " +
+                NoteUtil.month(new Date(note.dtEdited).getMonth(), true) +
+                " " +
+                new Date(note.dtEdited).getDate() +
+                " " +
+                new Date(note.dtEdited).getFullYear()
+              }}
+            </div>
+          </div>
+          <div
+            v-for="note in listStore.getList.note.filter((it) => {
+              return it.completed;
+            })"
+            :key="note.id"
+          >
+            <NoteField :obj-note="note" :b-with-checkbox="bWithCheckbox" />
+            <div
+              v-if="bShowTime"
+              class="text-xs italic pl-[23px] text-slate-400 py-[1px]"
+            >
+              {{
+                NoteUtil.convert2Digit(new Date(note.dtEdited).getHours()) +
+                ":" +
+                NoteUtil.convert2Digit(new Date(note.dtEdited).getMinutes()) +
+                ", " +
+                NoteUtil.month(new Date(note.dtEdited).getMonth(), true) +
+                " " +
+                new Date(note.dtEdited).getDate() +
+                " " +
+                new Date(note.dtEdited).getFullYear()
+              }}
+            </div>
+          </div>
+        </div>
+        <div v-else>
+          <div v-for="note in listStore.getList.note" :key="note.id">
+            <NoteField :obj-note="note" :b-with-checkbox="bWithCheckbox" />
+            <div
+              v-if="bShowTime"
+              class="text-xs italic pl-[23px] text-slate-400 py-[1px]"
+            >
+              {{
+                NoteUtil.convert2Digit(new Date(note.dtEdited).getHours()) +
+                ":" +
+                NoteUtil.convert2Digit(new Date(note.dtEdited).getMinutes()) +
+                ", " +
+                NoteUtil.month(new Date(note.dtEdited).getMonth(), true) +
+                " " +
+                new Date(note.dtEdited).getDate() +
+                " " +
+                new Date(note.dtEdited).getFullYear()
+              }}
+            </div>
           </div>
         </div>
       </div>
@@ -240,13 +300,6 @@ onMounted(() => {
     >
       sort
     </span>
-    <span
-      class="cursor-pointer material-symbols-outlined text-slate-200"
-      :class="bShowTime ? 'filled' : ''"
-      @click="showTime()"
-    >
-      schedule
-    </span>
     <div class="text-center grow">
       <span v-if="dateEdited != undefined" class="text-sm">
         Edited
@@ -259,23 +312,81 @@ onMounted(() => {
     </div>
     <span
       class="cursor-pointer material-symbols-outlined text-slate-200"
-      @click="deleteModal?.show()"
+      @click="actionModal?.show()"
     >
-      delete
+      more_vert
     </span>
   </div>
 
+  <ModalDialog ref="actionModal">
+    <div>
+      <ListTile
+        @click="
+          {
+            actionModal?.hide();
+            showCheckbox();
+          }
+        "
+      >
+        <span :class="bWithCheckbox ? 'font-bold' : ''">Checkbox</span>
+        <template v-slot:trailing>
+          <span
+            class="material-symbols-outlined"
+            :class="bWithCheckbox ? 'opacity-90 filled' : 'opacity-30'"
+          >
+            {{ bWithCheckbox ? "visibility" : "visibility_off" }}
+          </span>
+        </template>
+      </ListTile>
+      <ListTile
+        class="border-t border-slate-400/50"
+        @click="
+          {
+            actionModal?.hide();
+            showTime();
+          }
+        "
+      >
+        <span :class="bShowTime ? 'font-bold' : ''">Show Time</span>
+        <template v-slot:trailing>
+          <span
+            class="material-symbols-outlined"
+            :class="bShowTime ? 'opacity-90 filled' : 'opacity-30'"
+          >
+            {{ bShowTime ? "visibility" : "visibility_off" }}
+          </span>
+        </template>
+      </ListTile>
+      <ListTile
+        class="border-t border-slate-400/50"
+        @click="
+          {
+            actionModal?.hide();
+            deleteModal?.show();
+          }
+        "
+      >
+        <span class="font-semibold tracking-wide text-red-500">
+          Delete Note
+        </span>
+        <template v-slot:trailing>
+          <span class="text-red-500 material-symbols-outlined">delete</span>
+        </template>
+      </ListTile>
+    </div>
+  </ModalDialog>
+
   <ModalDialog ref="sortModal" str-title="Sort By">
     <div class="flex flex-col">
-      <div
-        class="flex justify-between items-center gap-x-[15px] p-[15px] border-t border-slate-400/50 cursor-pointer"
+      <ListTile
+        class="border-t border-slate-400/50"
         @click="
           sType === sortType.sDefaultAsc
             ? sorting(sortType.sDefaultDsc)
             : sorting(sortType.sDefaultAsc)
         "
       >
-        <div
+        <span
           :class="
             sType === sortType.sDefaultAsc || sType === sortType.sDefaultDsc
               ? 'font-bold'
@@ -283,31 +394,33 @@ onMounted(() => {
           "
         >
           Default
-        </div>
-        <div class="flex items-center">
-          <span
-            class="text-slate-700 material-symbols-outlined"
-            :class="sType === sortType.sDefaultAsc ? '' : 'opacity-30'"
-          >
-            south
-          </span>
-          <span
-            class="text-slate-700 material-symbols-outlined"
-            :class="sType === sortType.sDefaultDsc ? '' : 'opacity-30'"
-          >
-            north
-          </span>
-        </div>
-      </div>
-      <div
-        class="flex justify-between items-center gap-x-[15px] p-[15px] border-t border-slate-400/50 cursor-pointer"
+        </span>
+        <template v-slot:trailing>
+          <div class="flex items-center">
+            <span
+              class="material-symbols-outlined"
+              :class="sType === sortType.sDefaultAsc ? '' : 'opacity-30'"
+            >
+              south
+            </span>
+            <span
+              class="material-symbols-outlined"
+              :class="sType === sortType.sDefaultDsc ? '' : 'opacity-30'"
+            >
+              north
+            </span>
+          </div>
+        </template>
+      </ListTile>
+      <ListTile
+        class="border-t border-slate-400/50"
         @click="
           sType === sortType.sAlphaAsc
             ? sorting(sortType.sAlphaDsc)
             : sorting(sortType.sAlphaAsc)
         "
       >
-        <div
+        <span
           :class="
             sType === sortType.sAlphaAsc || sType === sortType.sAlphaDsc
               ? 'font-bold'
@@ -315,31 +428,33 @@ onMounted(() => {
           "
         >
           Alphabet
-        </div>
-        <div class="flex items-center">
-          <span
-            class="text-slate-700 material-symbols-outlined"
-            :class="sType === sortType.sAlphaAsc ? '' : 'opacity-30'"
-          >
-            south
-          </span>
-          <span
-            class="text-slate-700 material-symbols-outlined"
-            :class="sType === sortType.sAlphaDsc ? '' : 'opacity-30'"
-          >
-            north
-          </span>
-        </div>
-      </div>
-      <div
-        class="flex justify-between items-center gap-x-[15px] p-[15px] border-t border-slate-400/50 cursor-pointer"
+        </span>
+        <template v-slot:trailing>
+          <div class="flex items-center">
+            <span
+              class="material-symbols-outlined"
+              :class="sType === sortType.sAlphaAsc ? '' : 'opacity-30'"
+            >
+              south
+            </span>
+            <span
+              class="material-symbols-outlined"
+              :class="sType === sortType.sAlphaDsc ? '' : 'opacity-30'"
+            >
+              north
+            </span>
+          </div>
+        </template>
+      </ListTile>
+      <ListTile
+        class="border-t border-slate-400/50"
         @click="
           sType === sortType.sDateAsc
             ? sorting(sortType.sDateDsc)
             : sorting(sortType.sDateAsc)
         "
       >
-        <div
+        <span
           :class="
             sType === sortType.sDateAsc || sType === sortType.sDateDsc
               ? 'font-bold'
@@ -347,22 +462,24 @@ onMounted(() => {
           "
         >
           Date Edited
-        </div>
-        <div class="flex items-center">
-          <span
-            class="text-slate-700 material-symbols-outlined"
-            :class="sType === sortType.sDateAsc ? '' : 'opacity-30'"
-          >
-            south
-          </span>
-          <span
-            class="text-slate-700 material-symbols-outlined"
-            :class="sType === sortType.sDateDsc ? '' : 'opacity-30'"
-          >
-            north
-          </span>
-        </div>
-      </div>
+        </span>
+        <template v-slot:trailing>
+          <div class="flex items-center">
+            <span
+              class="material-symbols-outlined"
+              :class="sType === sortType.sDateAsc ? '' : 'opacity-30'"
+            >
+              south
+            </span>
+            <span
+              class="material-symbols-outlined"
+              :class="sType === sortType.sDateDsc ? '' : 'opacity-30'"
+            >
+              north
+            </span>
+          </div>
+        </template>
+      </ListTile>
     </div>
   </ModalDialog>
 
