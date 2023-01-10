@@ -132,7 +132,6 @@ onMounted(() => {
     bShowTime.value = data.showTime;
     bWithCheckbox.value = data.withCheckbox;
   }
-  actionModal.value?.show();
 });
 </script>
 <template>
