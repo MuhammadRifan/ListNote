@@ -248,7 +248,14 @@ onMounted(() => {
           </div>
         </div>
       </div>
-      <div v-if="isCreateNew" class="flex flex-row">
+      <div
+        class="flex flex-row"
+        :class="
+          isCreateNew
+            ? 'opacity-100 h-[24px] cursor-auto'
+            : 'opacity-0 h-0 cursor-none overflow-hidden'
+        "
+      >
         <li />
         <div class="flex items-center grow gap-x-[10px]">
           <TextField
@@ -258,12 +265,19 @@ onMounted(() => {
             str-class="grow h-[24px]"
             str-class-input="h-[24px]"
             @focusin="saveNewNote(false)"
-            @focusout="onClose ? clearNewNote() : saveNewNote(true)"
+            @focusout="
+              onClose
+                ? clearNewNote()
+                : newNote.length == 0
+                ? clearNewNote()
+                : saveNewNote(true)
+            "
             @keydown.enter="saveNewNote(true)"
             :b-simple="true"
             :b-border="false"
             :b-text-area="true"
             :b-auto-height="true"
+            :i-default-height="24"
             :i-max-length="100"
           />
         </div>
