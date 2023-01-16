@@ -1,8 +1,8 @@
 /* eslint-disable prettier/prettier */
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { Note } from './Note';
+import { List } from './List';
 
-@Entity({ name: 'users' })
+@Entity({ name: 'user' })
 export class User {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
@@ -16,6 +16,6 @@ export class User {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @OneToMany(() => Note, (note) => note.user)
-  note: Note;
+  @OneToMany(() => List, (list) => list.user)
+  lists: List;
 }
