@@ -112,6 +112,32 @@ const showCheckbox = () => {
   bWithCheckbox.value = !bWithCheckbox.value;
 };
 
+const bShowChecked = ref(false);
+
+const showChecked = () => {
+  listStore.showChecked();
+  bShowChecked.value = !bShowChecked.value;
+};
+
+const heightChecked = ref("24px");
+
+const findHeight = () => {
+  const ret = ref(0);
+  if (listStore.getList) {
+    const list = listStore.getList;
+    for (let i = 0; i < list.note.length; i++) {
+      const element = list.note[i];
+      if (!element.checked) continue;
+      if (element.height === undefined || element.height == 0) {
+        ret.value += 24;
+      } else ret.value += element.height;
+    }
+  }
+  heightChecked.value = ret.value.toString() + "px";
+};
+
+listStore.$subscribe(() => findHeight());
+
 watch(
   () => listStore.getList,
   (list) => {
@@ -131,6 +157,8 @@ onMounted(() => {
     sType.value = data.sortType;
     bShowTime.value = data.showTime;
     bWithCheckbox.value = data.withCheckbox;
+    bShowChecked.value = data.showChecked;
+    findHeight();
   }
 });
 </script>
@@ -167,43 +195,18 @@ onMounted(() => {
     </span>
   </div>
 
-  <div class="h-[54px]" />
-
-  <div id="lists">
+  <main id="lists" class="my-[54px]">
     <ul class="list-disc list-inside py-[10px] px-[15px]">
       <div
         v-if="
           listStore.getList != undefined && listStore.getList.note.length > 0
         "
       >
+        <!-- Checkbox List -->
         <div v-if="listStore.getList.withCheckbox">
           <div
             v-for="note in listStore.getList.note.filter((it) => {
-              return !it.completed;
-            })"
-            :key="note.id"
-          >
-            <NoteField :obj-note="note" :b-with-checkbox="bWithCheckbox" />
-            <div
-              v-if="bShowTime"
-              class="text-xs italic pl-[23px] text-slate-400 py-[1px]"
-            >
-              {{
-                NoteUtil.convert2Digit(new Date(note.dtEdited).getHours()) +
-                ":" +
-                NoteUtil.convert2Digit(new Date(note.dtEdited).getMinutes()) +
-                ", " +
-                NoteUtil.month(new Date(note.dtEdited).getMonth(), true) +
-                " " +
-                new Date(note.dtEdited).getDate() +
-                " " +
-                new Date(note.dtEdited).getFullYear()
-              }}
-            </div>
-          </div>
-          <div
-            v-for="note in listStore.getList.note.filter((it) => {
-              return it.completed;
+              return !it.checked;
             })"
             :key="note.id"
           >
@@ -226,6 +229,7 @@ onMounted(() => {
             </div>
           </div>
         </div>
+        <!-- Default List -->
         <div v-else>
           <div v-for="note in listStore.getList.note" :key="note.id">
             <NoteField :obj-note="note" :b-with-checkbox="bWithCheckbox" />
@@ -247,12 +251,14 @@ onMounted(() => {
             </div>
           </div>
         </div>
+        <!--  -->
       </div>
+      <!-- Input New Field -->
       <div
         class="flex flex-row"
         :class="
           isCreateNew
-            ? 'opacity-100 h-[24px] cursor-auto'
+            ? 'opacity-100 h-auto cursor-auto'
             : 'opacity-0 h-0 cursor-none overflow-hidden'
         "
       >
@@ -262,8 +268,7 @@ onMounted(() => {
             v-model="newNote"
             ref="noteNewField"
             str-id="noteNewElement"
-            str-class="grow h-[24px]"
-            str-class-input="h-[24px]"
+            str-class="grow"
             @focusin="saveNewNote(false)"
             @focusout="
               onClose
@@ -290,18 +295,73 @@ onMounted(() => {
           close
         </span>
       </div>
+      <!-- Button New Field -->
+      <div
+        v-if="!isCreateNew"
+        class="flex items-center cursor-pointer add-button w-max"
+        @click="createNewNote()"
+      >
+        <span class="material-symbols-outlined">add</span>
+        Add List
+      </div>
+      <!-- Checked List -->
+      <div
+        v-if="
+          listStore.getList != undefined &&
+          listStore.getList.note.length > 0 &&
+          listStore.getList.withCheckbox
+        "
+      >
+        <!-- Checked Button -->
+        <div
+          class="py-[10px] flex items-center gap-x-[15px] cursor-pointer"
+          @click="showChecked()"
+        >
+          <span
+            class="transition duration-300 material-symbols-outlined"
+            :class="bShowChecked ? 'rotate-0' : '-rotate-90 -translate-y-[2px]'"
+          >
+            expand_more
+          </span>
+          Checked
+        </div>
+        <!-- Checked List -->
+        <div
+          id="checkedList"
+          class="overflow-hidden transition-all duration-300"
+          :style="{ height: bShowChecked ? heightChecked : '0px' }"
+        >
+          <!-- :class="bShowChecked ? 'h-[' + heightChecked + 'px]' : 'h-0'" -->
+          <div
+            v-for="note in listStore.getList.note.filter((it) => {
+              return it.checked;
+            })"
+            :key="note.id"
+          >
+            <NoteField :obj-note="note" :b-with-checkbox="bWithCheckbox" />
+            <div
+              v-if="bShowTime"
+              class="text-xs italic pl-[23px] text-slate-400 py-[1px]"
+            >
+              {{
+                NoteUtil.convert2Digit(new Date(note.dtEdited).getHours()) +
+                ":" +
+                NoteUtil.convert2Digit(new Date(note.dtEdited).getMinutes()) +
+                ", " +
+                NoteUtil.month(new Date(note.dtEdited).getMonth(), true) +
+                " " +
+                new Date(note.dtEdited).getDate() +
+                " " +
+                new Date(note.dtEdited).getFullYear()
+              }}
+            </div>
+          </div>
+        </div>
+        <!--  -->
+      </div>
+      <!-- -->
     </ul>
-    <div
-      v-if="!isCreateNew"
-      class="border border-slate-300 w-max pl-[15px] pr-[20px] py-[5px] rounded-full mx-auto flex items-center gap-x-[5px] cursor-pointer"
-      @click="createNewNote()"
-    >
-      <span class="material-symbols-outlined">add</span>
-      Add List
-    </div>
-  </div>
-
-  <div class="h-[54px]" />
+  </main>
 
   <div
     class="fixed bottom-0 flex items-center p-[15px] w-full max-w-[600px] gap-x-[10px] bg-slate-700"
@@ -510,3 +570,9 @@ onMounted(() => {
     </div>
   </ModalDialog>
 </template>
+
+<style lang="scss" scoped>
+.add-button {
+  @apply pl-[15px] pr-[20px] py-[5px] my-[10px] border border-slate-300 rounded-full mx-auto gap-x-[5px];
+}
+</style>

@@ -4,7 +4,7 @@ export default {
 };
 </script>
 <script setup lang="ts">
-// import SearchField from "@/components/input_field/SearchField.vue";
+import SearchField from "@/components/input_field/SearchField.vue";
 import { useListStore, type NoteStore } from "@/store/ListStore";
 import { ePage } from "@/util/NoteEnum";
 import NoteUtil from "@/util/NoteUtil";
@@ -35,10 +35,15 @@ const goNote = (id?: number) => {
 </script>
 
 <template>
-  <!-- <div class="fixed top-0 w-full max-w-[600px] p-[15px]">
-    <SearchField str-placeholder="Search your notes" />
-  </div>
-  <div class="h-[76px]" /> -->
+  <!-- <div
+    class="fixed top-[10px] w-full max-w-[600px] p-[15px] flex items-center gap-x-[15px]"
+  >
+    <SearchField str-placeholder="Search your notes" class="grow" />
+    <div
+      class="w-[46px] h-[46px] rounded-full border border-slate-100 cursor-pointer hidden"
+    />
+  </div> -->
+  <div class="h-[81px]" />
   <section v-if="listStore.data.length > 0">
     <div
       v-if="listStore.countPinned > 0"
@@ -49,7 +54,7 @@ const goNote = (id?: number) => {
       <div
         v-for="list in listStore.data.filter((it) => it.pin == true)"
         :key="list.id"
-        class="border rounded-2xl border-slate-100 mx-[15px] mt-[10px] p-[10px] cursor-pointer"
+        class="border rounded-2xl border-slate-100 mx-[15px] mt-[15px] p-[10px] cursor-pointer"
         @click="goNote(list.id)"
       >
         <div class="font-semibold">{{ list.title }}</div>
@@ -73,7 +78,7 @@ const goNote = (id?: number) => {
       <div
         v-for="list in listStore.data.filter((it) => it.pin == false)"
         :key="list.id"
-        class="border rounded-2xl border-slate-100 mx-[15px] mt-[10px] p-[10px] cursor-pointer"
+        class="border rounded-2xl border-slate-100 mx-[15px] mt-[15px] p-[10px] cursor-pointer"
         @click="goNote(list.id)"
       >
         <div class="font-semibold">{{ list.title }}</div>

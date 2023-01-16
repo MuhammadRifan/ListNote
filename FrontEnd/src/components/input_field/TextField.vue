@@ -89,6 +89,7 @@ const updateModelValue = (val: any) => {
       "style",
       `height:${props.iDefaultHeight}px;`
     );
+    height.value = props.iDefaultHeight;
   }
 };
 

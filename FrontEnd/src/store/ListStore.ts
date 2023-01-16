@@ -1,13 +1,3 @@
-// export const useCounterStore = defineStore('counter', () => {
-//   const count = ref(0)
-//   const name = ref('Eduardo')
-//   const doubleCount = computed(() => count.value * 2)
-//   function increment() {
-//     count.value++
-//   }
-//   return { count, name, doubleCount, increment }
-// })
-
 import { sortType } from "@/util/NoteEnum";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
@@ -17,7 +7,7 @@ export interface NoteStore {
   note: string;
   dtEdited: number;
   height: number;
-  completed: boolean;
+  checked: boolean;
 }
 
 export interface ListStore {
@@ -29,6 +19,7 @@ export interface ListStore {
   dtEdited: number;
   sortType: sortType;
   showTime: boolean;
+  showChecked: boolean;
   withCheckbox: boolean;
 }
 
@@ -45,6 +36,7 @@ export const useListStore = defineStore(
       dtEdited: Date.now(),
       sortType: sortType.sDefaultAsc,
       showTime: false,
+      showChecked: true,
       withCheckbox: false,
     };
     const data = ref<ListStore[]>([]);
@@ -68,6 +60,17 @@ export const useListStore = defineStore(
     });
 
     // ACTION
+    function rename() {
+      // for (let i = 0; i < data.value.length; i++) {
+      //   for (let j = 0; j < data.value[i].note.length; j++) {
+      //     const ele = data.value[i].note[j];
+      //     if (ele.completed != undefined) {
+      //       ele.checked = ele.completed;
+      //       ele.completed = undefined;
+      //     }
+      //   }
+      // }
+    }
     function findId(id: number) {
       for (let i = 0; i < data.value.length; i++) {
         if (data.value[i].id == id) return i;
@@ -151,6 +154,13 @@ export const useListStore = defineStore(
         data.value[id].withCheckbox = !data.value[id].withCheckbox;
       }
     }
+    function showChecked() {
+      const id = findId(idActive.value);
+
+      if (id != undefined) {
+        data.value[id].showChecked = !data.value[id].showChecked;
+      }
+    }
 
     function title(str: string) {
       if (findId(idActive.value) === undefined) createListNote();
@@ -181,7 +191,7 @@ export const useListStore = defineStore(
           note: note,
           dtEdited: Date.now(),
           height: height,
-          completed: false,
+          checked: false,
         });
 
         data.value[id].note = arrNote;
@@ -202,7 +212,7 @@ export const useListStore = defineStore(
               note: note.note,
               dtEdited: note.dtEdited,
               height: note.height,
-              completed: note.completed,
+              checked: note.checked,
             };
             break;
           }
@@ -234,6 +244,7 @@ export const useListStore = defineStore(
     const state = { lastID, data, idActive };
     const getters = { getLastID, getList, countPinned, countOther };
     const action = {
+      rename,
       deleteList,
       sort,
       showTime,
@@ -242,6 +253,7 @@ export const useListStore = defineStore(
       addNote,
       editNote,
       removeNote,
+      showChecked,
       showCheckbox,
     };
 

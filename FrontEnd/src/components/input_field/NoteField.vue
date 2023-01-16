@@ -51,14 +51,17 @@ const saveStore = () => {
     id: props.objNote.id,
     note: note.value,
     dtEdited: Date.now(),
-    height: noteField.value?.height ?? 24,
-    completed: checkbox.value,
+    height:
+      noteField.value?.height === undefined || noteField.value?.height == 0
+        ? 24
+        : noteField.value?.height,
+    checked: checkbox.value,
   });
 };
 
 onMounted(() => {
   if (props.objNote.note.length > 0) note.value = props.objNote.note;
-  checkbox.value = props.objNote.completed ?? false;
+  checkbox.value = props.objNote.checked ?? false;
   noteField.value?.updateModelValue(note.value);
 });
 </script>
