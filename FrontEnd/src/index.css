@@ -4,7 +4,7 @@
 
 @layer base {
   #app {
-    @apply bg-slate-300;
+    @apply bg-slate-700;
     font-family: 'SF Pro Display', sans-serif;
   }
 
