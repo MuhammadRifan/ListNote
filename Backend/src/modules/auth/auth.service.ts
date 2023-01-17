@@ -1,30 +1,50 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UserService } from '../user/user.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from 'src/models/User';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private userService: UserService,
+    @InjectRepository(User) private userRepository: Repository<User>,
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(username: string, password: string): Promise<any> {
-    const user = await this.userService.findOne(username);
-
-    if (user && user.password === password) {
-      const { username } = user;
-      return username;
-    }
-
-    return null;
-  }
-
   async login(user: any) {
+    const userData = await this.userRepository.findOneBy({
+      username: user.username,
+    });
+
+    if (!userData)
+      throw new HttpException(
+        'Username Atau Password Salah',
+        HttpStatus.BAD_REQUEST,
+      );
+
+    if (user.password != userData.password)
+      throw new HttpException(
+        'Username Atau Password Salah',
+        HttpStatus.BAD_REQUEST,
+      );
+
     const payload = { name: user.name, sub: user.id };
 
     return {
       access_token: this.jwtService.sign(payload),
     };
+  }
+
+  async register(userData: any) {
+    const user = await this.userRepository.findOneBy({
+      username: userData.username,
+    });
+
+    if (user)
+      throw new HttpException('Username Already Used!', HttpStatus.BAD_REQUEST);
+    const newUser = this.userRepository.create({ ...userData });
+    await this.userRepository.save(newUser);
+
+    return await this.userRepository.findOneBy({ username: userData.username });
   }
 }
