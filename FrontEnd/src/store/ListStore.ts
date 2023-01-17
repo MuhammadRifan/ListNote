@@ -179,7 +179,7 @@ export const useListStore = defineStore(
       if (id != undefined) data.value[id].pin = !data.value[id].pin;
     }
 
-    function addNote(note: string, height: number) {
+    function addNote(note: string, height: number, checked: boolean) {
       if (findId(idActive.value) === undefined) createListNote();
       const id = findId(idActive.value);
 
@@ -191,7 +191,7 @@ export const useListStore = defineStore(
           note: note,
           dtEdited: Date.now(),
           height: height,
-          checked: false,
+          checked: checked,
         });
 
         data.value[id].note = arrNote;

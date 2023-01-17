@@ -35,14 +35,14 @@ const goNote = (id?: number) => {
 </script>
 
 <template>
-  <!-- <div
+  <div
     class="fixed top-[10px] w-full max-w-[600px] p-[15px] flex items-center gap-x-[15px]"
   >
     <SearchField str-placeholder="Search your notes" class="grow" />
     <div
       class="w-[46px] h-[46px] rounded-full border border-slate-100 cursor-pointer hidden"
     />
-  </div> -->
+  </div>
   <div class="h-[81px]" />
   <section v-if="listStore.data.length > 0">
     <div

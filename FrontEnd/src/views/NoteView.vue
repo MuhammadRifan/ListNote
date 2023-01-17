@@ -21,23 +21,26 @@ const goBack = () => NoteUtil.goPage(ePage.eBack, router);
 
 const dateEdited = ref<Date>();
 
+// pin
 const pin = ref(false);
 const pinned = () => {
   listStore.pin();
   if (listStore.getList != undefined) pin.value = listStore.getList.pin;
 };
 
+// title
 const titleElement: ComputedRef<HTMLElement | null> = computed(() =>
   document.getElementById("titleElement")
 );
 const titleField = ref<InstanceType<typeof TextField> | null>(null);
 
 const title = ref("");
-const saveTitle = (submit: boolean) => {
-  if (submit) titleElement.value?.blur();
-  else if (title.value.length > 0) listStore.title(title.value);
+const saveTitle = () => {
+  titleElement.value?.blur();
+  if (title.value.length > 0) listStore.title(title.value);
 };
 
+// new note
 const noteNewElement: ComputedRef<HTMLElement | null> = computed(() =>
   document.getElementById("noteNewElement")
 );
@@ -45,12 +48,15 @@ const noteNewField = ref<InstanceType<typeof TextField> | null>(null);
 
 const isFocus = ref(false);
 const onClose = ref(false);
+const onCheckbox = ref(false);
 
 const isCreateNew = ref(false);
 const newNote = ref("");
+const newCheckbox = ref(false);
 
 const createNewNote = () => {
   isCreateNew.value = true;
+  noteNewField.value?.updateModelValue("");
   noteNewElement.value?.focus();
 };
 
@@ -58,18 +64,22 @@ const saveNewNote = (isSave: boolean) => {
   if (isSave) {
     if (isFocus.value && newNote.value.length > 0) {
       isCreateNew.value = false;
-      listStore.addNote(newNote.value, noteNewField.value?.height ?? 0);
+      listStore.addNote(
+        newNote.value,
+        noteNewField.value?.height ?? 0,
+        newCheckbox.value
+      );
       newNote.value = "";
+      newCheckbox.value = false;
     }
     unFocus();
     isFocus.value = false;
-  } else {
-    isFocus.value = true;
-  }
+  } else isFocus.value = true;
 };
 
 const clearNewNote = () => {
   newNote.value = "";
+  newCheckbox.value = false;
   isFocus.value = false;
   isCreateNew.value = false;
   unFocus();
@@ -80,6 +90,9 @@ const unFocus = () => {
   noteNewField.value?.updateModelValue("");
 };
 
+const actionModal = ref<InstanceType<typeof ModalDialog> | null>(null);
+
+// sort
 const sortModal = ref<InstanceType<typeof ModalDialog> | null>(null);
 const sType = ref<sortType>();
 
@@ -89,8 +102,7 @@ const sorting = (sort: sortType) => {
   sortModal.value?.hide();
 };
 
-const actionModal = ref<InstanceType<typeof ModalDialog> | null>(null);
-
+// delete
 const deleteModal = ref<InstanceType<typeof ModalDialog> | null>(null);
 
 const deleteList = () => {
@@ -98,6 +110,7 @@ const deleteList = () => {
   goBack();
 };
 
+// show time
 const bShowTime = ref(false);
 
 const showTime = () => {
@@ -105,13 +118,15 @@ const showTime = () => {
   bShowTime.value = !bShowTime.value;
 };
 
-const bWithCheckbox = ref(false);
+// show checkbox
+const bShowCheckbox = ref(false);
 
 const showCheckbox = () => {
   listStore.showCheckbox();
-  bWithCheckbox.value = !bWithCheckbox.value;
+  bShowCheckbox.value = !bShowCheckbox.value;
 };
 
+// show checked
 const bShowChecked = ref(false);
 
 const showChecked = () => {
@@ -156,7 +171,7 @@ onMounted(() => {
     dateEdited.value = new Date(data.dtEdited);
     sType.value = data.sortType;
     bShowTime.value = data.showTime;
-    bWithCheckbox.value = data.withCheckbox;
+    bShowCheckbox.value = data.withCheckbox;
     bShowChecked.value = data.showChecked;
     findHeight();
   }
@@ -180,8 +195,8 @@ onMounted(() => {
       str-id="titleElement"
       str-placeholder="Title"
       str-class-input="text-center overflow-hidden"
-      @focusout="saveTitle(false)"
-      @keydown.enter="saveTitle(true)"
+      @focusout="saveTitle()"
+      @keydown.enter="saveTitle()"
       :i-max-length="25"
       :b-border="false"
       :b-simple="true"
@@ -210,7 +225,7 @@ onMounted(() => {
             })"
             :key="note.id"
           >
-            <NoteField :obj-note="note" :b-with-checkbox="bWithCheckbox" />
+            <NoteField :obj-note="note" :b-with-checkbox="bShowCheckbox" />
             <div
               v-if="bShowTime"
               class="text-xs italic pl-[23px] text-slate-400 py-[1px]"
@@ -232,7 +247,7 @@ onMounted(() => {
         <!-- Default List -->
         <div v-else>
           <div v-for="note in listStore.getList.note" :key="note.id">
-            <NoteField :obj-note="note" :b-with-checkbox="bWithCheckbox" />
+            <NoteField :obj-note="note" :b-with-checkbox="bShowCheckbox" />
             <div
               v-if="bShowTime"
               class="text-xs italic pl-[23px] text-slate-400 py-[1px]"
@@ -262,22 +277,37 @@ onMounted(() => {
             : 'opacity-0 h-0 cursor-none overflow-hidden'
         "
       >
-        <li />
+        <li v-if="!bShowCheckbox" class="w-[10px]" />
         <div class="flex items-center grow gap-x-[10px]">
+          <div class="self-start h-[22px] flex items-center">
+            <input
+              v-if="bShowCheckbox"
+              type="checkbox"
+              class="bg-white w-[15px] h-[15px]"
+              v-model="newCheckbox"
+              @mouseenter="onCheckbox = true"
+              @mouseout="onCheckbox = false"
+            />
+          </div>
           <TextField
             v-model="newNote"
             ref="noteNewField"
             str-id="noteNewElement"
-            str-class="grow"
-            @focusin="saveNewNote(false)"
+            str-class="bg-red-500 grow"
+            @focusin="!onCheckbox ? saveNewNote(false) : ''"
             @focusout="
               onClose
                 ? clearNewNote()
+                : onCheckbox
+                ? noteNewElement?.focus()
                 : newNote.length == 0
                 ? clearNewNote()
                 : saveNewNote(true)
             "
             @keydown.enter="saveNewNote(true)"
+            :str-class-input="
+              bShowCheckbox && newCheckbox ? 'line-through text-slate-400' : ''
+            "
             :b-simple="true"
             :b-border="false"
             :b-text-area="true"
@@ -338,7 +368,7 @@ onMounted(() => {
             })"
             :key="note.id"
           >
-            <NoteField :obj-note="note" :b-with-checkbox="bWithCheckbox" />
+            <NoteField :obj-note="note" :b-with-checkbox="bShowCheckbox" />
             <div
               v-if="bShowTime"
               class="text-xs italic pl-[23px] text-slate-400 py-[1px]"
@@ -401,13 +431,13 @@ onMounted(() => {
           }
         "
       >
-        <span :class="bWithCheckbox ? 'font-bold' : ''">Checkbox</span>
+        <span :class="bShowCheckbox ? 'font-bold' : ''">Checkbox</span>
         <template v-slot:trailing>
           <span
             class="material-symbols-outlined"
-            :class="bWithCheckbox ? 'opacity-90 filled' : 'opacity-30'"
+            :class="bShowCheckbox ? 'opacity-90 filled' : 'opacity-30'"
           >
-            {{ bWithCheckbox ? "visibility" : "visibility_off" }}
+            {{ bShowCheckbox ? "visibility" : "visibility_off" }}
           </span>
         </template>
       </ListTile>
