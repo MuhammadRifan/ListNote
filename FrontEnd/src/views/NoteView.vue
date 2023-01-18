@@ -151,7 +151,11 @@ const findHeight = () => {
   heightChecked.value = ret.value.toString() + "px";
 };
 
-listStore.$subscribe(() => findHeight());
+listStore.$subscribe(() => {
+  findHeight();
+  const data = listStore.getList;
+  if (data != undefined) dateEdited.value = new Date(data.dtEdited);
+});
 
 watch(
   () => listStore.getList,
