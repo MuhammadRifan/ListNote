@@ -1,0 +1,21 @@
+data list
+{
+	id: lastID.value++,
+	pin: false,
+	title: "",
+	note: [],
+	idNote: 0,
+	dtEdited: Date.now(),
+	sortType: sortType.sDefaultAsc,
+	showTime: false,
+	withCheckbox: false,
+}
+
+data note
+{
+	id: data.value[id].idNote++,
+	note: note,
+	dtEdited: Date.now(),
+	height: height,
+	checked: false,
+}
