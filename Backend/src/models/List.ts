@@ -35,7 +35,7 @@ export class List {
   @Column()
   idNote: number;
 
-  @Column()
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   dtEdited: Date;
 
   @Column()

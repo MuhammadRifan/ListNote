@@ -1,5 +1,19 @@
-import { Controller, Delete, Get, Post, Put, UseGuards } from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ListDto } from './dtos/list.dto';
 import { ListService } from './list.service';
 
 @Controller('list')
@@ -8,51 +22,55 @@ export class ListController {
 
   // List Route
   @UseGuards(JwtAuthGuard)
-  @Get()
-  getAllList(): any {
-    return this.listService.getAllList();
+  @Get(':id')
+  getAllList(@Param('id', ParseIntPipe) id: number): any {
+    return this.listService.getAllList(id);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post()
-  postList(): any {
-    return this.listService.postList();
+  @UsePipes(new ValidationPipe())
+  @Post(':id')
+  postList(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() listData: ListDto,
+  ): any {
+    return this.listService.postList(id, listData);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Put()
-  putList(): any {
+  @Put(':id')
+  putList(@Param('id', ParseIntPipe) id: number): any {
     return this.listService.putList();
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete()
-  deleteList(): any {
+  @Delete(':id')
+  deleteList(@Param('id', ParseIntPipe) id: number): any {
     return this.listService.deleteList();
   }
 
   // Note Route
   @UseGuards(JwtAuthGuard)
-  @Get('note')
-  getAllNote(): any {
+  @Get('note/:id')
+  getAllNote(@Param('id', ParseIntPipe) id: number): any {
     return this.listService.getAllNote();
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('note')
-  postNote(): any {
+  @Post('note/:id')
+  postNote(@Param('id', ParseIntPipe) id: number): any {
     return this.listService.postNote();
   }
 
   @UseGuards(JwtAuthGuard)
-  @Put('note')
-  putNote(): any {
+  @Put('note/:id')
+  putNote(@Param('id', ParseIntPipe) id: number): any {
     return this.listService.putNote();
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete('note')
-  deleteNote(): any {
+  @Delete('note/:id')
+  deleteNote(@Param('id', ParseIntPipe) id: number): any {
     return this.listService.deleteNote();
   }
 }

@@ -17,7 +17,7 @@ import { List } from 'src/models/List';
     PassportModule,
     JwtModule.register({
       secret: 'SECRET',
-      signOptions: { expiresIn: '60s' },
+      signOptions: { expiresIn: '5m' },
     }),
   ],
   providers: [AuthService, JwtStrategy],
