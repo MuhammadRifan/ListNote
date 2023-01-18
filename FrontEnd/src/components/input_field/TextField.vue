@@ -10,6 +10,10 @@ const props = defineProps({
   strId: {
     type: String,
   },
+  strType: {
+    type: String,
+    default: "text",
+  },
   strClass: {
     type: String,
   },
@@ -104,25 +108,23 @@ defineExpose({ updateModelValue, height });
       'cursor-text',
       strClass,
       bBorder ? 'border border-slate-100' : '',
-      bSimple
-        ? ''
-        : 'flex items-center justify-between rounded-full pr-[18px] ',
+      bSimple ? '' : 'flex items-center justify-between pr-[15px]',
     ]"
   >
     <input
       v-if="!bTextArea"
-      type="text"
       v-model="value"
       @input="onInput"
       @focusin="atFocusIn"
       @focusout="atFocusOut"
       :id="strId"
+      :type="strType"
       :maxlength="iMaxLength"
       :placeholder="strPlaceholder"
       :class="[
         'w-full input',
         strClassInput,
-        bSimple ? '' : 'rounded-l-full pl-[18px] mr-[5px] py-[10px]',
+        bSimple ? '' : 'rounded-l-full pl-[15px] mr-[5px] py-[10px]',
       ]"
     />
     <textarea
