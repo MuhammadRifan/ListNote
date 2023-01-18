@@ -4,7 +4,7 @@ export default {
 };
 </script>
 <script setup lang="ts">
-import { computed, ref, type ComputedRef } from "vue";
+import { ref } from "vue";
 
 defineProps({
   strPlaceholder: {
@@ -12,23 +12,24 @@ defineProps({
   },
 });
 
-const iFocus = ref(false);
-const inputField: ComputedRef<HTMLElement | null> = computed(() =>
-  document.getElementById("inputSearch")
-);
+const isSearching = ref(false);
 const searchValue = ref("");
+const lastValue = ref("");
 
-const transform = (isFocus: boolean) => {
-  iFocus.value = isFocus;
+const search = (search: boolean) => {
+  if (search) {
+    isSearching.value = true;
+  } else {
+    searchValue.value = "";
+    isSearching.value = false;
+  }
 };
 
-const clearSearch = () => {
-  if (iFocus.value) {
-    searchValue.value = "";
-    inputField.value?.blur();
-  } else {
-    inputField.value?.focus();
+const checkValue = () => {
+  if (lastValue.value != searchValue.value) {
+    isSearching.value = false;
   }
+  lastValue.value = searchValue.value;
 };
 </script>
 <template>
@@ -40,25 +41,15 @@ const clearSearch = () => {
       class="w-full pl-[18px] mr-[5px] py-[10px] rounded-l-full input"
       id="inputSearch"
       v-model="searchValue"
+      @keyup="checkValue()"
       :placeholder="strPlaceholder"
-      @focusin="transform(true)"
-      @focusout="transform(false)"
     />
-    <div class="relative flex">
-      <span
-        class="material-symbols-outlined transisi"
-        :class="iFocus ? 'opacity-0 rotate-90' : 'opacity-100 rotate-0'"
-      >
-        search
-      </span>
-      <span
-        class="absolute cursor-pointer material-symbols-outlined transisi"
-        :class="iFocus ? 'opacity-100 rotate-0' : 'opacity-0 -rotate-90'"
-        @click="clearSearch()"
-      >
-        close
-      </span>
-    </div>
+    <span
+      class="cursor-pointer material-symbols-outlined"
+      @click="isSearching ? search(false) : search(true)"
+    >
+      {{ isSearching ? "close" : "search" }}
+    </span>
   </div>
 </template>
 
@@ -68,8 +59,5 @@ const clearSearch = () => {
 }
 .input:focus {
   @apply outline-none;
-}
-.transisi {
-  transition: opacity 0.3s linear, transform 0.3s linear;
 }
 </style>

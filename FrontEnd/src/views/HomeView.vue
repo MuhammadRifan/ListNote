@@ -5,10 +5,12 @@ export default {
 </script>
 <script setup lang="ts">
 import SearchField from "@/components/input_field/SearchField.vue";
+import TextField from "@/components/input_field/TextField.vue";
+import ModalDialog from "@/components/modal/ModalDialog.vue";
 import { useListStore, type NoteStore } from "@/store/ListStore";
 import { ePage } from "@/util/NoteEnum";
 import NoteUtil from "@/util/NoteUtil";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -32,24 +34,30 @@ const goNote = (id?: number) => {
   if (id === undefined) listStore.idActive = listStore.getLastID;
   else listStore.idActive = id;
 };
+
+const signinModal = ref<InstanceType<typeof ModalDialog> | null>(null);
+const signupModal = ref<InstanceType<typeof ModalDialog> | null>(null);
+const seePassword = ref(false);
+
+onMounted(() => {});
 </script>
 
 <template>
   <div
-    class="fixed top-[10px] w-full max-w-[600px] p-[15px] flex items-center gap-x-[15px]"
+    class="fixed top-0 w-full max-w-[600px] p-[15px] flex items-center gap-x-[15px]"
   >
     <SearchField str-placeholder="Search your notes" class="grow" />
-    <div
-      class="w-[46px] h-[46px] rounded-full border border-slate-100 cursor-pointer hidden"
-    />
-  </div>
-  <div class="h-[81px]" />
-  <section v-if="listStore.data.length > 0">
-    <div
-      v-if="listStore.countPinned > 0"
-      id="pinned"
-      class="pt-[10px] pb-[15px]"
+    <span
+      class="cursor-pointer font-extralight material-symbols-outlined"
+      style="font-size: 60px"
+      @click="signinModal?.show()"
     >
+      account_circle
+    </span>
+  </div>
+  <div class="h-[90px]" />
+  <section v-if="listStore.data.length > 0">
+    <div v-if="listStore.countPinned > 0" id="pinned" class="pb-[15px]">
       <div class="text-sm mx-[15px]">Pinned</div>
       <div
         v-for="list in listStore.data.filter((it) => it.pin == true)"
@@ -110,4 +118,108 @@ const goNote = (id?: number) => {
       add_circle
     </span>
   </div>
+
+  <ModalDialog ref="signinModal" str-title="Sign In">
+    <div>
+      <div class="p-[10px] flex flex-col gap-y-[10px]">
+        <TextField
+          str-placeholder="Email"
+          str-class="border-slate-400 rounded-xl"
+        />
+        <TextField
+          str-placeholder="Password"
+          str-class="border-slate-400 rounded-xl"
+          :str-type="seePassword ? 'text' : 'password'"
+        >
+          <template v-slot:suffix>
+            <span
+              class="cursor-pointer material-symbols-outlined filled text-slate-500"
+              @click="seePassword = !seePassword"
+            >
+              {{ seePassword ? "visibility" : "visibility_off" }}
+            </span>
+          </template>
+        </TextField>
+      </div>
+      <div
+        class="flex mt-[10px] border-t border-slate-400 divide-x divide-slate-400 items-center"
+      >
+        <div
+          class="w-full text-center p-[13px] text-slate-700 text-lg tracking-wide cursor-pointer hover:bg-slate-500/20"
+          @click="
+            {
+              signinModal?.hide();
+              signupModal?.show();
+            }
+          "
+        >
+          Sign Up
+        </div>
+        <div
+          class="w-full text-center p-[13px] text-green-600 text-lg font-semibold tracking-wide cursor-pointer hover:bg-green-300/20"
+        >
+          Sign In
+        </div>
+      </div>
+    </div>
+  </ModalDialog>
+
+  <ModalDialog ref="signupModal" str-title="Sign Up">
+    <div>
+      <div class="p-[10px] flex flex-col gap-y-[10px]">
+        <TextField
+          str-placeholder="Email"
+          str-class="border-slate-400 rounded-xl"
+        />
+        <TextField
+          str-placeholder="Password"
+          str-class="border-slate-400 rounded-xl"
+          :str-type="seePassword ? 'text' : 'password'"
+        >
+          <template v-slot:suffix>
+            <span
+              class="cursor-pointer material-symbols-outlined filled text-slate-500"
+              @click="seePassword = !seePassword"
+            >
+              {{ seePassword ? "visibility" : "visibility_off" }}
+            </span>
+          </template>
+        </TextField>
+        <TextField
+          str-placeholder="Confirm Password"
+          str-class="border-slate-400 rounded-xl"
+          :str-type="seePassword ? 'text' : 'password'"
+        >
+          <template v-slot:suffix>
+            <span
+              class="cursor-pointer material-symbols-outlined filled text-slate-500"
+              @click="seePassword = !seePassword"
+            >
+              {{ seePassword ? "visibility" : "visibility_off" }}
+            </span>
+          </template>
+        </TextField>
+      </div>
+      <div
+        class="flex mt-[10px] border-t border-slate-400 divide-x divide-slate-400 items-center"
+      >
+        <div
+          class="w-full text-center p-[13px] text-slate-700 text-lg tracking-wide cursor-pointer hover:bg-slate-500/20"
+          @click="
+            {
+              signupModal?.hide();
+              signinModal?.show();
+            }
+          "
+        >
+          Sign In
+        </div>
+        <div
+          class="w-full text-center p-[13px] text-blue-500 text-lg font-semibold tracking-wide cursor-pointer hover:bg-blue-300/20"
+        >
+          Sign Up
+        </div>
+      </div>
+    </div>
+  </ModalDialog>
 </template>
