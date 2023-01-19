@@ -146,6 +146,7 @@ const findHeight = () => {
       if (element.height === undefined || element.height == 0) {
         ret.value += 24;
       } else ret.value += element.height;
+      if (bShowTime.value) ret.value += 18;
     }
   }
   heightChecked.value = ret.value.toString() + "px";
