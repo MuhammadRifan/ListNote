@@ -12,6 +12,8 @@ defineProps({
   },
 });
 
+const emit = defineEmits(["search", "cancel"]);
+
 const isSearching = ref(false);
 const searchValue = ref("");
 const lastValue = ref("");
@@ -19,9 +21,11 @@ const lastValue = ref("");
 const search = (search: boolean) => {
   if (search) {
     isSearching.value = true;
+    emit("search", searchValue.value);
   } else {
     searchValue.value = "";
     isSearching.value = false;
+    emit("cancel");
   }
 };
 

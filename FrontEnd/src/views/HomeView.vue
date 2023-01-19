@@ -7,7 +7,11 @@ export default {
 import SearchField from "@/components/input_field/SearchField.vue";
 import TextField from "@/components/input_field/TextField.vue";
 import ModalDialog from "@/components/modal/ModalDialog.vue";
-import { useListStore, type NoteStore } from "@/store/ListStore";
+import {
+  useListStore,
+  type ListStore,
+  type NoteStore,
+} from "@/store/ListStore";
 import { ePage } from "@/util/NoteEnum";
 import NoteUtil from "@/util/NoteUtil";
 import { onMounted, ref } from "vue";
@@ -39,26 +43,69 @@ const signinModal = ref<InstanceType<typeof ModalDialog> | null>(null);
 const signupModal = ref<InstanceType<typeof ModalDialog> | null>(null);
 const seePassword = ref(false);
 
-onMounted(() => {
-  signinModal.value?.show();
-});
+const isSearching = ref(false);
+const listSearch = ref<ListStore[]>([]);
+
+const search = (str: string) => {
+  isSearching.value = true;
+  listSearch.value = listStore.data.filter((ls) => {
+    return (
+      ls.title.toLowerCase().includes(str) ||
+      ls.note.filter((nt) => nt.note.toLowerCase().includes(str)).length > 0
+    );
+  });
+};
+
+onMounted(() => {});
 </script>
 
 <template>
-  <div
-    class="fixed top-0 w-full max-w-[600px] p-[15px] flex items-center gap-x-[15px]"
-  >
-    <SearchField str-placeholder="Search your notes" class="grow" />
-    <div
-      class="w-[46px] h-[46px] rounded-full border border-slate-100 cursor-pointer flex items-center"
-      @click="signinModal?.show()"
-    >
-      <span class="mx-auto text-4xl font-thin material-symbols-outlined">
-        person
-      </span>
+  <div class="fixed top-0 w-full max-w-[600px] p-[15px]">
+    <div class="flex items-center gap-x-[15px]">
+      <SearchField
+        str-placeholder="Search your notes"
+        class="grow"
+        @search="(val: string) => search(val.toLowerCase())"
+        @cancel="isSearching = false"
+      />
+      <div
+        class="w-[46px] h-[46px] rounded-full border border-slate-100 cursor-pointer flex items-center"
+        @click="signinModal?.show()"
+      >
+        <span class="mx-auto text-4xl font-thin material-symbols-outlined">
+          person
+        </span>
+      </div>
+    </div>
+    <div v-if="isSearching" class="text-sm mt-[10px]">
+      {{
+        listSearch.length > 0
+          ? `Found ${listSearch.length} result :`
+          : "No result found :("
+      }}
     </div>
   </div>
-  <section v-if="listStore.data.length > 0" class="mt-[80px]">
+  <div :class="isSearching ? 'h-[106px]' : 'h-[80px]'" />
+  <section v-if="isSearching">
+    <div v-if="listSearch.length > 0">
+      <div
+        v-for="list in listSearch"
+        :key="list.id"
+        class="border rounded-2xl border-slate-100 mx-[15px] p-[10px] cursor-pointer"
+        @click="goNote(list.id)"
+      >
+        <div class="font-semibold">{{ list.title }}</div>
+        <ul v-if="list.note.length > 0" class="list-disc py-[5px] px-[15px]">
+          <li v-for="note in limitNote(list.note)" :key="note.id">
+            <div class="truncate">
+              {{ note.note }}
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+  <section v-else-if="listStore.data.length > 0">
     <div v-if="listStore.countPinned > 0" id="pinned" class="pb-[15px]">
       <div class="text-sm mx-[15px]">Pinned</div>
       <div
