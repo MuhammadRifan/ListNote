@@ -39,7 +39,9 @@ const signinModal = ref<InstanceType<typeof ModalDialog> | null>(null);
 const signupModal = ref<InstanceType<typeof ModalDialog> | null>(null);
 const seePassword = ref(false);
 
-onMounted(() => {});
+onMounted(() => {
+  signinModal.value?.show();
+});
 </script>
 
 <template>
@@ -47,16 +49,16 @@ onMounted(() => {});
     class="fixed top-0 w-full max-w-[600px] p-[15px] flex items-center gap-x-[15px]"
   >
     <SearchField str-placeholder="Search your notes" class="grow" />
-    <span
-      class="cursor-pointer font-extralight material-symbols-outlined"
-      style="font-size: 60px"
+    <div
+      class="w-[46px] h-[46px] rounded-full border border-slate-100 cursor-pointer flex items-center"
       @click="signinModal?.show()"
     >
-      account_circle
-    </span>
+      <span class="mx-auto text-4xl font-thin material-symbols-outlined">
+        person
+      </span>
+    </div>
   </div>
-  <div class="h-[90px]" />
-  <section v-if="listStore.data.length > 0">
+  <section v-if="listStore.data.length > 0" class="mt-[80px]">
     <div v-if="listStore.countPinned > 0" id="pinned" class="pb-[15px]">
       <div class="text-sm mx-[15px]">Pinned</div>
       <div
@@ -141,6 +143,9 @@ onMounted(() => {});
           </template>
         </TextField>
       </div>
+      <!-- <div class="invisible w-full text-sm text-center">
+        Lorem ipsum dolor sit amet consectetur adipisicing elit.
+      </div> -->
       <div
         class="flex mt-[10px] border-t border-slate-400 divide-x divide-slate-400 items-center"
       >

@@ -297,7 +297,7 @@ onMounted(() => {
             v-model="newNote"
             ref="noteNewField"
             str-id="noteNewElement"
-            str-class="bg-red-500 grow"
+            str-class="grow"
             @focusin="!onCheckbox ? saveNewNote(false) : ''"
             @focusout="
               onClose
