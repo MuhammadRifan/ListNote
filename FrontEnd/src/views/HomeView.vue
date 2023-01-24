@@ -39,6 +39,8 @@ const goNote = (id?: number) => {
   else listStore.idActive = id;
 };
 
+const accountPanel = ref<InstanceType<typeof ModalDialog> | null>(null);
+
 const signinModal = ref<InstanceType<typeof ModalDialog> | null>(null);
 const signupModal = ref<InstanceType<typeof ModalDialog> | null>(null);
 const seePassword = ref(false);
@@ -56,7 +58,9 @@ const search = (str: string) => {
   });
 };
 
-onMounted(() => {});
+onMounted(() => {
+  accountPanel.value?.show();
+});
 </script>
 
 <template>
@@ -85,7 +89,9 @@ onMounted(() => {});
       }}
     </div>
   </div>
+
   <div :class="isSearching ? 'h-[106px]' : 'h-[80px]'" />
+
   <section v-if="isSearching">
     <div v-if="listSearch.length > 0">
       <div
@@ -105,6 +111,7 @@ onMounted(() => {});
       </div>
     </div>
   </section>
+
   <section v-else-if="listStore.data.length > 0">
     <div v-if="listStore.countPinned > 0" id="pinned" class="pb-[15px]">
       <div class="text-sm mx-[15px]">Pinned</div>
@@ -150,6 +157,7 @@ onMounted(() => {});
       </div>
     </div>
   </section>
+
   <section
     v-else
     class="flex flex-col w-full items-center text-center gap-y-[10px] my-[100px] opacity-30"
@@ -157,6 +165,7 @@ onMounted(() => {});
     <span class="text-5xl material-symbols-outlined">lightbulb</span>
     <span class="text-lg">List you add appear here</span>
   </section>
+
   <div
     class="fixed bottom-0 w-full max-w-[600px] p-[25px] flex items-center justify-end"
   >
@@ -274,4 +283,52 @@ onMounted(() => {});
       </div>
     </div>
   </ModalDialog>
+
+  <ModalDialog ref="accountPanel" str-title="Account">
+    <div class="px-[15px] pb-[15px]">
+      <div class="flex flex-row gap-x-[10px] items-center">
+        <span class="font-bold">Name:</span>
+        <span class="flex-1 truncate">
+          Lorem ipsum dolor, sit amet consectetur adipisicing elit.
+        </span>
+        <div class="btn px-[15px] py-[2px] text-sm min-w-max">Change Name</div>
+      </div>
+      <div class="flex gap-x-[15px] my-[10px]">
+        <div class="flex-1 btn py-[2px] !bg-slate-200">Change Password</div>
+        <div class="flex-1 btn py-[2px] !bg-slate-200">Sign Out</div>
+      </div>
+      <div class="flex flex-row gap-x-[15px]">
+        <div
+          class="flex-1 overflow-hidden text-center border border-slate-500 rounded-2xl"
+        >
+          <span class="text-lg border-b border-slate-500">Cloud</span>
+          <div class="my-[5px]">
+            <div>Last Edited:</div>
+            <div>21/01/2023 22:21</div>
+          </div>
+          <div class="text-lg border-t bg-sky-500/50 border-slate-500">
+            Download
+          </div>
+        </div>
+        <div
+          class="flex-1 overflow-hidden text-center border border-slate-500 rounded-2xl"
+        >
+          <span class="text-lg border-b border-slate-500">Local</span>
+          <div class="my-[5px]">
+            <div>Last Edited:</div>
+            <div>21/01/2023 22:21</div>
+          </div>
+          <div class="text-lg border-t bg-emerald-500/50 border-slate-500">
+            Upload
+          </div>
+        </div>
+      </div>
+    </div>
+  </ModalDialog>
 </template>
+
+<style scoped>
+.btn {
+  @apply border rounded-full border-slate-500 bg-slate-400/30 cursor-pointer text-center;
+}
+</style>
