@@ -6,7 +6,6 @@ export default {
 <script setup lang="ts">
 import { computed, type ComputedRef } from "vue";
 import { RouterView, useRoute } from "vue-router";
-// import MainLayout from "./layouts/MainLayout.vue";
 
 const route = useRoute();
 const layout: ComputedRef<string> = computed<string>(
