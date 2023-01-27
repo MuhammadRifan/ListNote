@@ -7,6 +7,7 @@ export default {
 import SearchField from "@/components/input_field/SearchField.vue";
 import TextField from "@/components/input_field/TextField.vue";
 import ModalDialog from "@/components/modal/ModalDialog.vue";
+import IconLoading from "@/components/icons/IconLoading.vue";
 import {
   useListStore,
   type ListStore,
@@ -14,11 +15,13 @@ import {
 } from "@/store/ListStore";
 import { ePage } from "@/util/NoteEnum";
 import NoteUtil from "@/util/NoteUtil";
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { useUserStore } from "@/store/UserStore";
 
 const router = useRouter();
 const listStore = useListStore();
+const userStore = useUserStore();
 
 const limitNote = (notes: NoteStore[]) => {
   const limit = ref(3);
@@ -39,12 +42,6 @@ const goNote = (id?: number) => {
   else listStore.idActive = id;
 };
 
-const accountPanel = ref<InstanceType<typeof ModalDialog> | null>(null);
-
-const signinModal = ref<InstanceType<typeof ModalDialog> | null>(null);
-const signupModal = ref<InstanceType<typeof ModalDialog> | null>(null);
-const seePassword = ref(false);
-
 const isSearching = ref(false);
 const listSearch = ref<ListStore[]>([]);
 
@@ -58,9 +55,130 @@ const search = (str: string) => {
   });
 };
 
-onMounted(() => {
-  accountPanel.value?.show();
-});
+const accountPanel = ref<InstanceType<typeof ModalDialog> | null>(null);
+
+const signinModal = ref<InstanceType<typeof ModalDialog> | null>(null);
+const signupModal = ref<InstanceType<typeof ModalDialog> | null>(null);
+
+const openSignIn = (fromSignUp: boolean) => {
+  if (fromSignUp) signupModal.value?.hide();
+  else {
+    userInField.value?.updateModelValue("");
+    passInField.value?.updateModelValue("");
+    errorInMsg.value = "";
+    showPassIn.value = false;
+
+    userUpField.value?.updateModelValue("");
+    passUpField.value?.updateModelValue("");
+    conPassUpField.value?.updateModelValue("");
+    errorUpMsg.value = "";
+    showPassUp.value = false;
+    showConPassUp.value = false;
+  }
+  if (!loadingUp.value) signinModal.value?.show();
+};
+
+const openSignUp = () => {
+  signinModal.value?.hide();
+  if (!loadingIn.value) signupModal.value?.show();
+};
+
+const userInField = ref<InstanceType<typeof TextField> | null>(null);
+const passInField = ref<InstanceType<typeof TextField> | null>(null);
+
+const errorInMsg = ref("");
+const showPassIn = ref(false);
+const loadingIn = ref(false);
+const userIn = ref("");
+const passIn = ref("");
+
+const signin = async () => {
+  if (!verifyIn()) return;
+
+  errorInMsg.value = "";
+  loadingIn.value = true;
+  signinModal.value?.lock();
+
+  await NoteUtil.AxiosWrapper("POST", "/auth/login", {
+    username: userIn.value,
+    password: passIn.value,
+  }).then(
+    (val) => {
+      loadingIn.value = false;
+      signinModal.value?.unlock();
+      userStore.signin({
+        name: userIn.value,
+        token: val.data.access_token,
+      });
+      signinModal.value?.hide();
+    },
+    (err) => {
+      loadingIn.value = false;
+      signinModal.value?.unlock();
+      errorInMsg.value = err.message;
+    }
+  );
+};
+
+const verifyIn = (): boolean => {
+  errorInMsg.value = "";
+  if (userIn.value.length == 0) {
+    errorInMsg.value = "Username harus diisi";
+  } else if (passIn.value.length == 0) {
+    errorInMsg.value = "Password harus diiisi";
+  }
+
+  return errorInMsg.value.length == 0;
+};
+
+const userUpField = ref<InstanceType<typeof TextField> | null>(null);
+const passUpField = ref<InstanceType<typeof TextField> | null>(null);
+const conPassUpField = ref<InstanceType<typeof TextField> | null>(null);
+
+const errorUpMsg = ref("");
+const showPassUp = ref(false);
+const showConPassUp = ref(false);
+const loadingUp = ref(false);
+const userUp = ref("");
+const passUp = ref("");
+const conPassUp = ref("");
+
+const signup = async () => {
+  if (!verifyUp()) return;
+
+  errorUpMsg.value = "";
+  loadingUp.value = true;
+  signupModal.value?.lock();
+
+  await NoteUtil.AxiosWrapper("POST", "/auth/register", {
+    username: userUp.value,
+    password: passUp.value,
+  }).then(
+    (val) => {
+      loadingUp.value = false;
+      signupModal.value?.unlock();
+      openSignIn(true);
+    },
+    (err) => {
+      loadingUp.value = false;
+      signupModal.value?.unlock();
+      errorUpMsg.value = err.message;
+    }
+  );
+};
+
+const verifyUp = (): boolean => {
+  errorUpMsg.value = "";
+  if (userUp.value.length == 0) {
+    errorUpMsg.value = "Username harus diisi";
+  } else if (passUp.value.length < 8) {
+    errorUpMsg.value = "Password minimal 8 karakter";
+  } else if (passUp.value != conPassUp.value) {
+    errorUpMsg.value = "Password tidak sama";
+  }
+
+  return errorUpMsg.value.length == 0;
+};
 </script>
 
 <template>
@@ -74,7 +192,9 @@ onMounted(() => {
       />
       <div
         class="w-[46px] h-[46px] rounded-full border border-slate-100 cursor-pointer flex items-center"
-        @click="signinModal?.show()"
+        @click="
+          userStore.user != undefined ? accountPanel?.show() : openSignIn(false)
+        "
       >
         <span class="mx-auto text-4xl font-thin material-symbols-outlined">
           person
@@ -181,45 +301,60 @@ onMounted(() => {
     <div>
       <div class="p-[10px] flex flex-col gap-y-[10px]">
         <TextField
-          str-placeholder="Email"
+          ref="userInField"
+          v-model="userIn"
+          str-placeholder="Username"
           str-class="border-slate-400 rounded-xl"
         />
         <TextField
+          ref="passInField"
+          v-model="passIn"
           str-placeholder="Password"
           str-class="border-slate-400 rounded-xl"
-          :str-type="seePassword ? 'text' : 'password'"
+          :str-type="showPassIn ? 'text' : 'password'"
         >
           <template v-slot:suffix>
             <span
               class="cursor-pointer material-symbols-outlined filled text-slate-500"
-              @click="seePassword = !seePassword"
+              @click="showPassIn = !showPassIn"
             >
-              {{ seePassword ? "visibility" : "visibility_off" }}
+              {{ showPassIn ? "visibility" : "visibility_off" }}
             </span>
           </template>
         </TextField>
       </div>
-      <!-- <div class="invisible w-full text-sm text-center">
-        Lorem ipsum dolor sit amet consectetur adipisicing elit.
-      </div> -->
       <div
-        class="flex mt-[10px] border-t border-slate-400 divide-x divide-slate-400 items-center"
+        class="w-full text-sm text-center text-red-500"
+        :class="errorInMsg.length > 0 ? '' : 'hidden'"
+      >
+        {{ errorInMsg }}
+      </div>
+      <div
+        class="flex mt-[10px] border-t border-slate-400 divide-x divide-slate-400 items-stretch"
       >
         <div
-          class="w-full text-center p-[13px] text-slate-700 text-lg tracking-wide cursor-pointer hover:bg-slate-500/20"
-          @click="
-            {
-              signinModal?.hide();
-              signupModal?.show();
-            }
-          "
+          class="w-full text-center p-[13px] cursor-pointer hover:bg-slate-500/20"
+          @click="openSignUp()"
         >
-          Sign Up
+          <span class="text-lg tracking-wide text-slate-700">Sign Up</span>
         </div>
         <div
-          class="w-full text-center p-[13px] text-green-600 text-lg font-semibold tracking-wide cursor-pointer hover:bg-green-300/20"
+          class="w-full text-center p-[13px] cursor-pointer hover:bg-green-300/30"
+          :class="loadingIn ? 'bg-green-300/30' : ''"
+          @click="signin()"
         >
-          Sign In
+          <IconLoading
+            v-if="loadingIn"
+            str-class="mx-auto border-green-500/30 border-t-green-600"
+            str-size="24px"
+            str-circle-width="4.5px"
+          />
+          <span
+            v-else
+            class="text-lg font-semibold tracking-wide text-green-600"
+          >
+            Sign In
+          </span>
         </div>
       </div>
     </div>
@@ -229,56 +364,76 @@ onMounted(() => {
     <div>
       <div class="p-[10px] flex flex-col gap-y-[10px]">
         <TextField
-          str-placeholder="Email"
+          ref="userUpField"
+          v-model="userUp"
+          str-placeholder="Username"
           str-class="border-slate-400 rounded-xl"
         />
         <TextField
+          ref="passUpField"
+          v-model="passUp"
           str-placeholder="Password"
           str-class="border-slate-400 rounded-xl"
-          :str-type="seePassword ? 'text' : 'password'"
+          :str-type="showPassUp ? 'text' : 'password'"
         >
           <template v-slot:suffix>
             <span
               class="cursor-pointer material-symbols-outlined filled text-slate-500"
-              @click="seePassword = !seePassword"
+              @click="showPassUp = !showPassUp"
             >
-              {{ seePassword ? "visibility" : "visibility_off" }}
+              {{ showPassUp ? "visibility" : "visibility_off" }}
             </span>
           </template>
         </TextField>
         <TextField
+          ref="conPassUpField"
+          v-model="conPassUp"
           str-placeholder="Confirm Password"
           str-class="border-slate-400 rounded-xl"
-          :str-type="seePassword ? 'text' : 'password'"
+          :str-type="showConPassUp ? 'text' : 'password'"
         >
           <template v-slot:suffix>
             <span
               class="cursor-pointer material-symbols-outlined filled text-slate-500"
-              @click="seePassword = !seePassword"
+              @click="showConPassUp = !showConPassUp"
             >
-              {{ seePassword ? "visibility" : "visibility_off" }}
+              {{ showConPassUp ? "visibility" : "visibility_off" }}
             </span>
           </template>
         </TextField>
       </div>
       <div
-        class="flex mt-[10px] border-t border-slate-400 divide-x divide-slate-400 items-center"
+        class="w-full text-sm text-center text-red-500"
+        :class="errorUpMsg.length > 0 ? '' : 'hidden'"
+      >
+        {{ errorUpMsg }}
+      </div>
+      <div
+        class="flex mt-[10px] border-t border-slate-400 divide-x divide-slate-400 items-stretch"
       >
         <div
-          class="w-full text-center p-[13px] text-slate-700 text-lg tracking-wide cursor-pointer hover:bg-slate-500/20"
-          @click="
-            {
-              signupModal?.hide();
-              signinModal?.show();
-            }
-          "
+          class="w-full text-center p-[13px] cursor-pointer hover:bg-slate-500/20"
+          @click="openSignIn(true)"
         >
-          Sign In
+          <span class="text-lg tracking-wide text-slate-700">Sign In</span>
         </div>
         <div
-          class="w-full text-center p-[13px] text-blue-500 text-lg font-semibold tracking-wide cursor-pointer hover:bg-blue-300/20"
+          class="w-full text-center p-[13px] cursor-pointer hover:bg-blue-300/30"
+          :class="loadingUp ? 'bg-blue-300/30' : ''"
+          @click="signup()"
         >
-          Sign Up
+          <IconLoading
+            v-if="loadingUp"
+            str-class="mx-auto border-blue-500/30 border-t-blue-600"
+            str-size="24px"
+            str-circle-width="4.5px"
+          />
+          <span
+            v-else
+            class="text-lg font-semibold tracking-wide text-blue-500"
+          >
+            Sign Up
+          </span>
         </div>
       </div>
     </div>
@@ -295,7 +450,17 @@ onMounted(() => {
       </div>
       <div class="flex gap-x-[15px] my-[10px]">
         <div class="flex-1 btn py-[2px] !bg-slate-200">Change Password</div>
-        <div class="flex-1 btn py-[2px] !bg-slate-200">Sign Out</div>
+        <div
+          class="flex-1 btn py-[2px] !bg-slate-200"
+          @click="
+            {
+              userStore.signout();
+              accountPanel?.hide();
+            }
+          "
+        >
+          Sign Out
+        </div>
       </div>
       <div class="flex flex-row gap-x-[15px]">
         <div

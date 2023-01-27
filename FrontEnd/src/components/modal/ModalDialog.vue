@@ -29,6 +29,8 @@ const show = () => {
 };
 
 const hide = () => {
+  if (isLock.value) return locking();
+
   isShowing.value = false;
 };
 
