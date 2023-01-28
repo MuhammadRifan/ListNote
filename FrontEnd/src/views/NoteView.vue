@@ -21,6 +21,17 @@ const goBack = () => NoteUtil.goPage(ePage.eBack, router);
 
 const dateEdited = ref<Date>();
 
+const convertDate = (date: Date): string => {
+  let str = "";
+
+  str += NoteUtil.convert2Digit(date.getHours()) + ":";
+  str += NoteUtil.convert2Digit(date.getMinutes()) + ", ";
+  str += NoteUtil.month(date.getMonth(), true) + " ";
+  str += date.getDate() + " " + date.getFullYear();
+
+  return str;
+};
+
 // pin
 const pin = ref(false);
 const pinned = () => {
@@ -235,17 +246,7 @@ onMounted(() => {
               v-if="bShowTime"
               class="text-xs italic pl-[23px] text-slate-400 py-[1px]"
             >
-              {{
-                NoteUtil.convert2Digit(new Date(note.dtEdited).getHours()) +
-                ":" +
-                NoteUtil.convert2Digit(new Date(note.dtEdited).getMinutes()) +
-                ", " +
-                NoteUtil.month(new Date(note.dtEdited).getMonth(), true) +
-                " " +
-                new Date(note.dtEdited).getDate() +
-                " " +
-                new Date(note.dtEdited).getFullYear()
-              }}
+              {{ convertDate(new Date(note.dtEdited)) }}
             </div>
           </div>
         </div>
@@ -257,17 +258,7 @@ onMounted(() => {
               v-if="bShowTime"
               class="text-xs italic pl-[23px] text-slate-400 py-[1px]"
             >
-              {{
-                NoteUtil.convert2Digit(new Date(note.dtEdited).getHours()) +
-                ":" +
-                NoteUtil.convert2Digit(new Date(note.dtEdited).getMinutes()) +
-                ", " +
-                NoteUtil.month(new Date(note.dtEdited).getMonth(), true) +
-                " " +
-                new Date(note.dtEdited).getDate() +
-                " " +
-                new Date(note.dtEdited).getFullYear()
-              }}
+              {{ convertDate(new Date(note.dtEdited)) }}
             </div>
           </div>
         </div>
@@ -366,7 +357,6 @@ onMounted(() => {
           class="overflow-hidden transition-all duration-300"
           :style="{ height: bShowChecked ? heightChecked : '0px' }"
         >
-          <!-- :class="bShowChecked ? 'h-[' + heightChecked + 'px]' : 'h-0'" -->
           <div
             v-for="note in listStore.getList.note.filter((it) => {
               return it.checked;
@@ -378,17 +368,7 @@ onMounted(() => {
               v-if="bShowTime"
               class="text-xs italic pl-[23px] text-slate-400 py-[1px]"
             >
-              {{
-                NoteUtil.convert2Digit(new Date(note.dtEdited).getHours()) +
-                ":" +
-                NoteUtil.convert2Digit(new Date(note.dtEdited).getMinutes()) +
-                ", " +
-                NoteUtil.month(new Date(note.dtEdited).getMonth(), true) +
-                " " +
-                new Date(note.dtEdited).getDate() +
-                " " +
-                new Date(note.dtEdited).getFullYear()
-              }}
+              {{ convertDate(new Date(note.dtEdited)) }}
             </div>
           </div>
         </div>

@@ -36,6 +36,26 @@ const limitNote = (notes: NoteStore[]) => {
   return temp;
 };
 
+const findLastUpdate = (lists: ListStore[]): string => {
+  const newest = ref(0);
+
+  for (let i = 0; i < lists.length; i++) {
+    const date = lists[i].dtEdited;
+    if (date > newest.value) newest.value = date;
+  }
+
+  if (newest.value == 0) return "";
+  else {
+    let str = "";
+    str += new Date(newest.value).getDate() + "/";
+    str += NoteUtil.convert2Digit(new Date(newest.value).getMonth() + 1) + "/";
+    str += new Date(newest.value).getFullYear() + " ";
+    str += NoteUtil.convert2Digit(new Date(newest.value).getHours()) + ":";
+    str += NoteUtil.convert2Digit(new Date(newest.value).getMinutes());
+    return str;
+  }
+};
+
 const goNote = (id?: number) => {
   NoteUtil.goPage(ePage.eNote, router);
   if (id === undefined) listStore.idActive = listStore.getLastID;
@@ -55,7 +75,14 @@ const search = (str: string) => {
   });
 };
 
+const localLastUpdate = ref("");
+
 const accountPanel = ref<InstanceType<typeof ModalDialog> | null>(null);
+
+const openAccountPanel = () => {
+  accountPanel.value?.show();
+  localLastUpdate.value = findLastUpdate(listStore.data);
+};
 
 const signinModal = ref<InstanceType<typeof ModalDialog> | null>(null);
 const signupModal = ref<InstanceType<typeof ModalDialog> | null>(null);
@@ -193,7 +220,7 @@ const verifyUp = (): boolean => {
       <div
         class="w-[46px] h-[46px] rounded-full border border-slate-100 cursor-pointer flex items-center"
         @click="
-          userStore.user != undefined ? accountPanel?.show() : openSignIn(false)
+          userStore.user != undefined ? openAccountPanel() : openSignIn(false)
         "
       >
         <span class="mx-auto text-4xl font-thin material-symbols-outlined">
@@ -444,7 +471,7 @@ const verifyUp = (): boolean => {
       <div class="flex flex-row gap-x-[10px] items-center">
         <span class="font-bold">Name:</span>
         <span class="flex-1 truncate">
-          Lorem ipsum dolor, sit amet consectetur adipisicing elit.
+          {{ userStore.user?.name ?? "Please sign in first" }}
         </span>
         <div class="btn px-[15px] py-[2px] text-sm min-w-max">Change Name</div>
       </div>
@@ -481,7 +508,7 @@ const verifyUp = (): boolean => {
           <span class="text-lg border-b border-slate-500">Local</span>
           <div class="my-[5px]">
             <div>Last Edited:</div>
-            <div>21/01/2023 22:21</div>
+            <div>{{ localLastUpdate }}</div>
           </div>
           <div class="text-lg border-t bg-emerald-500/50 border-slate-500">
             Upload
