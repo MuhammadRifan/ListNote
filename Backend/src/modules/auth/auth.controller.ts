@@ -14,8 +14,12 @@ export class AuthController {
 
   @UsePipes(new ValidationPipe())
   @Post('login')
-  login(@Body() userData: RegistrationDto): any {
-    return this.authService.login(userData); // return JWT access token
+  async login(@Body() userData: RegistrationDto): Promise<any> {
+    const token = await this.authService.login(userData);
+    return {
+      ...token,
+      username: userData.username,
+    }; // return JWT access token
   }
 
   @UsePipes(new ValidationPipe())

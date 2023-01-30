@@ -1,7 +1,9 @@
+/* eslint-disable prettier/prettier */
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/models/User';
+import { comparePasswords, encodePassword } from 'src/utils/bcrypt';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -22,7 +24,8 @@ export class AuthService {
         HttpStatus.BAD_REQUEST,
       );
 
-    if (user.password != userData.password)
+    const matched = comparePasswords(user.password, userData.password);
+    if (!matched) 
       throw new HttpException(
         'Username Atau Password Salah',
         HttpStatus.BAD_REQUEST,
@@ -31,7 +34,7 @@ export class AuthService {
     const payload = { name: user.name, sub: user.id };
 
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(payload)
     };
   }
 
@@ -42,6 +45,9 @@ export class AuthService {
 
     if (user)
       throw new HttpException('Username Already Used!', HttpStatus.BAD_REQUEST);
+
+    userData.password = await encodePassword(userData.password);
+
     const newUser = this.userRepository.create({ ...userData });
     await this.userRepository.save(newUser);
 
