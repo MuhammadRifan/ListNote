@@ -5,7 +5,7 @@ import { computed, ref } from "vue";
 export interface NoteStore {
   id: number;
   note: string;
-  dtEdited: number;
+  dtEdited: string;
   height: number;
   checked: boolean;
 }
@@ -16,7 +16,7 @@ export interface ListStore {
   title: string;
   note: NoteStore[];
   idNote: number;
-  dtEdited: number;
+  dtEdited: string;
   sortType: sortType;
   showTime: boolean;
   showChecked: boolean;
@@ -33,7 +33,7 @@ export const useListStore = defineStore(
       title: "",
       note: [],
       idNote: 0,
-      dtEdited: Date.now(),
+      dtEdited: new Date().toJSON(),
       sortType: sortType.sDefaultAsc,
       showTime: false,
       showChecked: true,
@@ -62,12 +62,10 @@ export const useListStore = defineStore(
     // ACTION
     function rename() {
       // for (let i = 0; i < data.value.length; i++) {
+      //   data.value[i].dtEdited = new Date(data.value[i].dtEdited).toJSON();
       //   for (let j = 0; j < data.value[i].note.length; j++) {
-      //     const ele = data.value[i].note[j];
-      //     if (ele.completed != undefined) {
-      //       ele.checked = ele.completed;
-      //       ele.completed = undefined;
-      //     }
+      //     const element = data.value[i].note[j];
+      //     element.dtEdited = new Date(element.dtEdited).toJSON();
       //   }
       // }
     }
@@ -79,7 +77,7 @@ export const useListStore = defineStore(
     }
     function updateTime() {
       const id = findId(idActive.value);
-      if (id != undefined) data.value[id].dtEdited = Date.now();
+      if (id != undefined) data.value[id].dtEdited = new Date().toJSON();
     }
     function createListNote() {
       const temp = { id: lastID.value++, ...dataDefault };
@@ -97,6 +95,17 @@ export const useListStore = defineStore(
 
       data.value = temp;
     }
+    function replace(newData: ListStore[]) {
+      data.value = [...newData];
+
+      let last = 0;
+      for (let i = 0; i < data.value.length; i++) {
+        const element = data.value[i];
+        if (last < element.id) last = element.id;
+      }
+      idActive.value = 0;
+      lastID.value = ++last;
+    }
 
     function sort(type: sortType) {
       const id = findId(idActive.value);
@@ -110,9 +119,13 @@ export const useListStore = defineStore(
           arrNote.sort((a, b) => b.id - a.id);
           //
         } else if (type === sortType.sDateAsc) {
-          arrNote.sort((a, b) => a.dtEdited - b.dtEdited);
+          arrNote.sort(
+            (a, b) => Date.parse(a.dtEdited) - Date.parse(b.dtEdited)
+          );
         } else if (type === sortType.sDateDsc) {
-          arrNote.sort((a, b) => b.dtEdited - a.dtEdited);
+          arrNote.sort(
+            (a, b) => Date.parse(b.dtEdited) - Date.parse(a.dtEdited)
+          );
           //
         } else if (type === sortType.sAlphaAsc) {
           arrNote.sort((a, b) => {
@@ -189,7 +202,7 @@ export const useListStore = defineStore(
         arrNote.push({
           id: data.value[id].idNote++,
           note: note,
-          dtEdited: Date.now(),
+          dtEdited: new Date().toJSON(),
           height: height,
           checked: checked,
         });
@@ -246,6 +259,7 @@ export const useListStore = defineStore(
     const action = {
       rename,
       deleteList,
+      replace,
       sort,
       showTime,
       title,

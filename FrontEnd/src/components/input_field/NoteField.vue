@@ -50,7 +50,7 @@ const saveStore = () => {
   listStore.editNote({
     id: props.objNote.id,
     note: note.value,
-    dtEdited: Date.now(),
+    dtEdited: new Date().toJSON(),
     height:
       noteField.value?.height === undefined || noteField.value?.height == 0
         ? 24

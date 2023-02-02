@@ -40,14 +40,14 @@ const findLastUpdate = (lists: ListStore[]): string => {
   const newest = ref(0);
 
   for (let i = 0; i < lists.length; i++) {
-    const date = lists[i].dtEdited;
+    const date = Date.parse(lists[i].dtEdited);
     if (date > newest.value) newest.value = date;
   }
 
-  if (newest.value == 0) return "";
+  if (newest.value == 0) return "Data not found";
   else {
     let str = "";
-    str += new Date(newest.value).getDate() + "/";
+    str += NoteUtil.convert2Digit(new Date(newest.value).getDate()) + "/";
     str += NoteUtil.convert2Digit(new Date(newest.value).getMonth() + 1) + "/";
     str += new Date(newest.value).getFullYear() + " ";
     str += NoteUtil.convert2Digit(new Date(newest.value).getHours()) + ":";
@@ -75,12 +75,130 @@ const search = (str: string) => {
   });
 };
 
+const cloudLastUpdate = ref("");
 const localLastUpdate = ref("");
 
 const accountPanel = ref<InstanceType<typeof ModalDialog> | null>(null);
 
 const openAccountPanel = () => {
   accountPanel.value?.show();
+  localLastUpdate.value = findLastUpdate(listStore.data);
+  cloudLastUpdate.value = findLastUpdate(tempDoang.value);
+};
+
+const upload = () => {
+  console.log(JSON.stringify(listStore.data));
+  cloudLastUpdate.value = findLastUpdate(tempDoang.value);
+};
+
+const tempDoang = ref<ListStore[]>([
+  {
+    id: 0,
+    pin: false,
+    title: "pokeeeee",
+    note: [
+      {
+        id: 0,
+        note: "pkaksada",
+        dtEdited: "2023-02-02T04:45:17.270Z",
+        height: 24,
+        checked: false,
+      },
+      {
+        id: 1,
+        note: "asdaasda",
+        dtEdited: "2023-02-02T04:45:20.325Z",
+        height: 24,
+        checked: false,
+      },
+      {
+        id: 2,
+        note: "adasdadada",
+        dtEdited: "2023-02-02T04:45:22.713Z",
+        height: 24,
+        checked: false,
+      },
+      {
+        id: 3,
+        note: "asdadasaa",
+        dtEdited: "2023-02-02T04:45:25.202Z",
+        height: 24,
+        checked: false,
+      },
+      {
+        id: 4,
+        note: "a",
+        dtEdited: "2023-02-02T04:45:26.946Z",
+        height: 24,
+        checked: false,
+      },
+      {
+        id: 5,
+        note: "sd",
+        dtEdited: "2023-02-02T04:45:29.039Z",
+        height: 24,
+        checked: false,
+      },
+      {
+        id: 6,
+        note: "pooake",
+        dtEdited: "2023-02-02T04:45:32.190Z",
+        height: 24,
+        checked: false,
+      },
+      {
+        id: 7,
+        note: "mkvfjnj",
+        dtEdited: "2023-02-02T04:45:35.113Z",
+        height: 24,
+        checked: false,
+      },
+    ],
+    idNote: 8,
+    dtEdited: "2023-02-02T04:45:35.113Z",
+    sortType: "DefaultAsc",
+    showTime: false,
+    showChecked: true,
+    withCheckbox: false,
+  },
+  {
+    id: 1,
+    pin: false,
+    title: "peler",
+    note: [
+      {
+        id: 0,
+        note: "peler",
+        dtEdited: "2023-02-02T05:56:35.233Z",
+        height: 24,
+        checked: false,
+      },
+      {
+        id: 1,
+        note: "ku",
+        dtEdited: "2023-02-02T05:56:37.690Z",
+        height: 24,
+        checked: false,
+      },
+      {
+        id: 2,
+        note: "keren",
+        dtEdited: "2023-02-02T05:56:40.586Z",
+        height: 24,
+        checked: false,
+      },
+    ],
+    idNote: 3,
+    dtEdited: "2023-02-02T05:56:40.586Z",
+    sortType: "DefaultAsc",
+    showTime: false,
+    showChecked: true,
+    withCheckbox: false,
+  },
+] as ListStore[]);
+
+const download = () => {
+  listStore.replace(tempDoang.value);
   localLastUpdate.value = findLastUpdate(listStore.data);
 };
 
@@ -134,7 +252,7 @@ const signin = async () => {
       loadingIn.value = false;
       signinModal.value?.unlock();
       userStore.signin({
-        name: userIn.value,
+        name: val.data.username,
         token: val.data.access_token,
       });
       signinModal.value?.hide();
@@ -469,11 +587,13 @@ const verifyUp = (): boolean => {
   <ModalDialog ref="accountPanel" str-title="Account">
     <div class="px-[15px] pb-[15px]">
       <div class="flex flex-row gap-x-[10px] items-center">
-        <span class="font-bold">Name:</span>
+        <span class="font-bold">Username:</span>
         <span class="flex-1 truncate">
           {{ userStore.user?.name ?? "Please sign in first" }}
         </span>
-        <div class="btn px-[15px] py-[2px] text-sm min-w-max">Change Name</div>
+        <div class="btn px-[15px] py-[2px] text-sm min-w-max">
+          Change Username
+        </div>
       </div>
       <div class="flex gap-x-[15px] my-[10px]">
         <div class="flex-1 btn py-[2px] !bg-slate-200">Change Password</div>
@@ -495,10 +615,15 @@ const verifyUp = (): boolean => {
         >
           <span class="text-lg border-b border-slate-500">Cloud</span>
           <div class="my-[5px]">
-            <div>Last Edited:</div>
-            <div>21/01/2023 22:21</div>
+            <div class="text-sm">Last Edited:</div>
+            <div class="text-sm italic font-semibold">
+              {{ cloudLastUpdate }}
+            </div>
           </div>
-          <div class="text-lg border-t bg-sky-500/50 border-slate-500">
+          <div
+            class="text-lg border-t cursor-pointer bg-sky-500/50 border-slate-500"
+            @click="download()"
+          >
             Download
           </div>
         </div>
@@ -507,10 +632,15 @@ const verifyUp = (): boolean => {
         >
           <span class="text-lg border-b border-slate-500">Local</span>
           <div class="my-[5px]">
-            <div>Last Edited:</div>
-            <div>{{ localLastUpdate }}</div>
+            <div class="text-sm">Last Edited:</div>
+            <div class="text-sm italic font-semibold">
+              {{ localLastUpdate }}
+            </div>
           </div>
-          <div class="text-lg border-t bg-emerald-500/50 border-slate-500">
+          <div
+            class="text-lg border-t cursor-pointer bg-emerald-500/50 border-slate-500"
+            @click="upload()"
+          >
             Upload
           </div>
         </div>
