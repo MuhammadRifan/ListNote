@@ -41,11 +41,12 @@ const checkValue = () => {
     class="flex items-center justify-between border rounded-full border-slate-100 pr-[18px]"
   >
     <input
-      type="text"
+      type="search"
       class="w-full pl-[18px] mr-[5px] py-[10px] rounded-l-full input"
       id="inputSearch"
       v-model="searchValue"
       @keyup="checkValue()"
+      @search="search(true)"
       :placeholder="strPlaceholder"
     />
     <span
@@ -63,5 +64,9 @@ const checkValue = () => {
 }
 .input:focus {
   @apply outline-none;
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
 }
 </style>
