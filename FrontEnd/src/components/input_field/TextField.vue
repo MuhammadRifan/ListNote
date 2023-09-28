@@ -15,7 +15,7 @@ const props = defineProps({
     default: "text",
   },
   strClass: {
-    type: String,
+    type: [String, Array<String>],
   },
   strClassInput: {
     type: String,

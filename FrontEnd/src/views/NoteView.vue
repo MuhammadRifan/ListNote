@@ -6,7 +6,7 @@ export default {
 <script setup lang="ts">
 import TextField from "@/components/input_field/TextField.vue";
 import NoteField from "@/components/input_field/NoteField.vue";
-import { useListStore } from "@/store/ListStore";
+import { useListStore, type NoteStore } from "@/store/ListStore";
 import { ePage, sortType } from "@/util/NoteEnum";
 import NoteUtil from "@/util/NoteUtil";
 import { computed, onMounted, ref, watch, type ComputedRef } from "vue";
@@ -16,6 +16,8 @@ import ListTile from "@/components/list/ListTile.vue";
 
 const router = useRouter();
 const listStore = useListStore();
+let dataList = listStore.getList;
+let noteList = ref<NoteStore[]>([]);
 
 const goBack = () => NoteUtil.goPage(ePage.eBack, router);
 
@@ -36,7 +38,7 @@ const convertDate = (date: Date): string => {
 const pin = ref(false);
 const pinned = () => {
   listStore.pin();
-  if (listStore.getList != undefined) pin.value = listStore.getList.pin;
+  if (dataList != undefined) pin.value = dataList.pin;
 };
 
 // title
@@ -48,7 +50,36 @@ const titleField = ref<InstanceType<typeof TextField> | null>(null);
 const title = ref("");
 const saveTitle = () => {
   titleElement.value?.blur();
-  if (title.value.length > 0) listStore.title(title.value);
+  listStore.title(title.value);
+};
+
+const searchElement: ComputedRef<HTMLElement | null> = computed(() =>
+  document.getElementById("searchElement")
+);
+const searchField = ref<InstanceType<typeof TextField> | null>(null);
+
+const search = ref("");
+const isSearching = ref(false);
+
+const searchNote = () => {
+  isSearching.value = !isSearching.value;
+  if (!isSearching.value) {
+    searchElement.value?.blur();
+    searchField.value?.updateModelValue("");
+    if (dataList) noteList.value = dataList.note;
+  }
+};
+
+const searchingNote = () => {
+  setTimeout(() => {
+    if (dataList) {
+      const searchedList = dataList.note.filter(({ note }) => {
+        return note.toLowerCase().includes(search.value.toLowerCase());
+      });
+
+      noteList.value = searchedList;
+    }
+  }, 100);
 };
 
 // new note
@@ -149,10 +180,9 @@ const heightChecked = ref("24px");
 
 const findHeight = () => {
   const ret = ref(0);
-  if (listStore.getList) {
-    const list = listStore.getList;
-    for (let i = 0; i < list.note.length; i++) {
-      const element = list.note[i];
+  if (dataList) {
+    for (let i = 0; i < noteList.value.length; i++) {
+      const element = noteList.value[i];
       if (!element.checked) continue;
       if (element.height === undefined || element.height == 0) {
         ret.value += 24;
@@ -166,9 +196,14 @@ const findHeight = () => {
 listStore.$subscribe(() => {
   findHeight();
   const data = listStore.getList;
-  if (data != undefined) dateEdited.value = new Date(data.dtEdited);
+  dataList = data;
+  if (data != undefined) {
+    noteList.value = data.note;
+    dateEdited.value = new Date(data.dtEdited);
+  }
 });
 
+// not sure why I dont delete this after adding subscribe
 watch(
   () => listStore.getList,
   (list) => {
@@ -177,18 +212,18 @@ watch(
 );
 
 onMounted(() => {
-  const data = listStore.getList;
-  if (data != undefined) {
-    if (data.title != "") {
-      title.value = data.title;
+  if (dataList != undefined) {
+    if (dataList.title != "") {
+      title.value = dataList.title;
       titleField.value?.updateModelValue(title.value);
     }
-    pin.value = data.pin;
-    dateEdited.value = new Date(data.dtEdited);
-    sType.value = data.sortType;
-    bShowTime.value = data.showTime;
-    bShowCheckbox.value = data.withCheckbox;
-    bShowChecked.value = data.showChecked;
+    noteList.value = dataList.note;
+    pin.value = dataList.pin;
+    dateEdited.value = new Date(dataList.dtEdited);
+    sType.value = dataList.sortType;
+    bShowTime.value = dataList.showTime;
+    bShowCheckbox.value = dataList.withCheckbox;
+    bShowChecked.value = dataList.showChecked;
     findHeight();
   }
 });
@@ -207,16 +242,33 @@ onMounted(() => {
     <TextField
       v-model="title"
       ref="titleField"
-      str-class="grow"
       str-id="titleElement"
       str-placeholder="Title"
       str-class-input="text-center overflow-hidden"
       @focusout="saveTitle()"
       @keydown.enter="saveTitle()"
+      :str-class="[isSearching ? 'w-[0%]' : 'w-[100%]', 'transition-all']"
       :i-max-length="25"
       :b-border="false"
       :b-simple="true"
     />
+    <TextField
+      v-model="search"
+      ref="searchField"
+      str-id="searchElement"
+      str-placeholder="Search"
+      str-class-input="text-center overflow-hidden"
+      @keyup="searchingNote()"
+      :str-class="[isSearching ? 'w-[100%]' : 'w-[0%]', 'transition-all']"
+      :b-border="false"
+      :b-simple="true"
+    />
+    <span
+      class="cursor-pointer material-symbols-outlined text-slate-200"
+      @click="searchNote()"
+    >
+      {{ isSearching ? "close" : "search" }}
+    </span>
     <span
       class="cursor-pointer material-symbols-outlined text-slate-200"
       :class="pin ? 'filled' : ''"
@@ -228,15 +280,11 @@ onMounted(() => {
 
   <main id="lists" class="my-[54px]">
     <ul class="list-disc list-inside py-[10px] px-[15px]">
-      <div
-        v-if="
-          listStore.getList != undefined && listStore.getList.note.length > 0
-        "
-      >
+      <div v-if="dataList != undefined && noteList.length > 0">
         <!-- Checkbox List -->
-        <div v-if="listStore.getList.withCheckbox">
+        <div v-if="dataList.withCheckbox">
           <div
-            v-for="note in listStore.getList.note.filter((it) => {
+            v-for="note in noteList.filter((it) => {
               return !it.checked;
             })"
             :key="note.id"
@@ -252,7 +300,7 @@ onMounted(() => {
         </div>
         <!-- Default List -->
         <div v-else>
-          <div v-for="note in listStore.getList.note" :key="note.id">
+          <div v-for="note in noteList" :key="note.id">
             <NoteField :obj-note="note" :b-with-checkbox="bShowCheckbox" />
             <div
               v-if="bShowTime"
@@ -333,9 +381,7 @@ onMounted(() => {
       <!-- Checked List -->
       <div
         v-if="
-          listStore.getList != undefined &&
-          listStore.getList.note.length > 0 &&
-          listStore.getList.withCheckbox
+          dataList != undefined && noteList.length > 0 && dataList.withCheckbox
         "
       >
         <!-- Checked Button -->
@@ -351,6 +397,7 @@ onMounted(() => {
           </span>
           Checked
         </div>
+        <!--  -->
         <!-- Checked List -->
         <div
           id="checkedList"
@@ -358,7 +405,7 @@ onMounted(() => {
           :style="{ height: bShowChecked ? heightChecked : '0px' }"
         >
           <div
-            v-for="note in listStore.getList.note.filter((it) => {
+            v-for="note in noteList.filter((it) => {
               return it.checked;
             })"
             :key="note.id"

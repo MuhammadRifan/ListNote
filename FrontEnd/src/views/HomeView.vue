@@ -15,7 +15,7 @@ import {
 } from "@/store/ListStore";
 import { ePage } from "@/util/NoteEnum";
 import NoteUtil from "@/util/NoteUtil";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/store/UserStore";
 
@@ -324,6 +324,10 @@ const verifyUp = (): boolean => {
 
   return errorUpMsg.value.length == 0;
 };
+
+onMounted(() => {
+  console.log(userStore.userss);
+});
 </script>
 
 <template>
